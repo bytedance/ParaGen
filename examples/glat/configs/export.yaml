@@ -1,0 +1,59 @@
+task:
+  class: GLATTranslationTask
+  mode: evaluate
+  src: en
+  tgt: de
+  maxlen: 256
+  index_only: True
+  tokenizer:
+    class: Tokenizer
+    vocab: resources/vocab # vocab path. hdfs NOT supported.
+    tokenize:
+      class: FastBPE
+  dataloader:
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 32
+  data:
+    test:
+      class: ParallelTextDataset
+      max_size: 128
+      path:
+        de: data/test.en-de.de # parallel data. hdfs supported.
+        en: data/test.en-de.en # parallel data. hdfs supported.
+  model:
+    class: GLATModel
+    encoder:
+      class: CachingTransformerEncoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'gelu'
+      return_seed: True
+      learn_pos: True
+      use_bert_layer_norm: True
+    decoder:
+      class: NonAutoTransformerDecoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'gelu'
+      learn_pos: True
+      use_bert_layer_norm: True
+    d_model: 512
+    max_output_length: 256
+    decoder_input: unk
+    path: checkpoints/best.pt # well-trained model. hdfs supported.
+  generator:
+    class: GLATGenerator
+env:
+  device: cuda
+export:
+  path: traced_glat
+  use_onnx: False

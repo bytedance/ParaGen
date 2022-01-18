@@ -1,0 +1,63 @@
+task:
+  class: SequenceClassificationTask
+  mode: train
+  label_name: 'label'
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: roberta-base
+  data:
+    train:
+      class: InMemoryDataLoader
+      dataset:
+        class: ParallelTextDataset
+        sort_samples: True
+        path:
+          input0: glue/data/RTE/train.input0
+          input1: glue/data/RTE/train.input1
+          label: glue/data/RTE/train.label
+      sampler:
+        class: ShuffleSampler
+        max_samples: 16
+    dev:
+      class: InMemoryDataLoader
+      dataset:
+        class: ParallelTextDataset
+        sort_samples: True
+        path:
+          input0: glue/data/RTE/dev.input0
+          input1: glue/data/RTE/dev.input1
+          label: glue/data/RTE/dev.label
+      sampler:
+        class: SequentialSampler
+        max_samples: 16
+  model:
+    class: AdvHuggingfaceSequenceClassificationModel
+    pretrained_model: roberta-base
+    init_mag: 0.05
+    adv_lr: 0.01
+    max_norm: 0.01
+  criterion:
+    class: CrossEntropy
+  trainer:
+    class: AdvTrainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 2e-5
+        warmup_steps: 122
+        total_steps: 2036
+      betas: (0.9, 0.98)
+      weight_decay: 0.001
+    max_steps: 2036
+    validate_interval_epoch: 1
+  generator:
+    class: Generator
+  evaluator:
+    class: Evaluator
+    metric:
+      acc:
+        class: Accuracy
+env:
+  device: cuda
+  slow_progress_bar: False

@@ -1,0 +1,17 @@
+.vscode/
+**/*.pyc
+**/*.DS_Store
+*.egg-info/
+*.swp
+.eggs/
+.idea/
+.tox/
+.pytest_cache/*
+venv/
+venv_py/
+.mypy_cache/
+__pycache__/
+/build
+/dist
+checkpoints/
+*.pt

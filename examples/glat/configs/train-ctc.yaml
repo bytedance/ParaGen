@@ -1,0 +1,106 @@
+task:
+  class: CTCTranslationTask
+  mode: train
+  src: en
+  tgt: de
+  maxlen: 256
+  index_only: True
+  tokenizer:
+    class: FastBPE
+    vocab: resources/vocab
+    add_bos: True
+    add_eos: True
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: BucketSampler
+        max_tokens: 8192
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: ParallelTextDataset
+      path:
+        de: data/train_distill.de
+        en: data/train.en
+    valid:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        de: data/valid.de
+        en: data/valid.en
+    test:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        de: data/test.de
+        en: data/test.en
+  model:
+    class: CTCModel
+    encoder:
+      class: TransformerEncoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'gelu'
+      attention_dropout: 0.1
+      return_seed: True
+      learn_pos: True
+      embed_scale: False
+      embed_layer_norm: True
+    decoder:
+      class: NonAutoTransformerDecoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'gelu'
+      learn_pos: True
+      embed_layer_norm: True
+    d_model: 512
+    max_output_length: 256
+    share_embedding: all
+    decoder_input: unk
+  criterion:
+      class: LabelSmoothedCTC
+      epsilon: 0.1
+  trainer:
+    class: CTCTrainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: InverseSquareRootRateScheduler
+        rate: 5e-4
+        warmup_steps: 4000
+      clip_norm: 0.
+      weight_decay: 1e-2
+      betas: (0.9, 0.999)
+    max_epochs: 200
+    max_steps: 300000
+    validate_interval_epoch: 1
+    assess_by: valid.bleu
+    save_model_dir: checkpoint
+  generator:
+    class: CTCGenerator
+  evaluator:
+    class: Evaluator
+    metric:
+      bleu:
+        class: BLEU
+env:
+  device: cuda
+  fp16: True
+  no_progress_bar: True
+  no_warning: True

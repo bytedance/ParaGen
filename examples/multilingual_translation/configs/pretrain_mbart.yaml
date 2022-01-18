@@ -1,0 +1,70 @@
+task:
+  class: MultilingualTranslationTask
+  mode: train
+  langs: ML50_langs.txt
+  maxlen: 512
+  post_collate: True
+  preprocessed: False
+  tokenized: True
+  mono: True
+  tgt_langtok: replace_bos_token
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/mbart-large-50
+  dataloader:
+    train:
+      class: StreamingDataLoader
+      max_tokens: 1536
+      length_interval: 16
+      maxlen: 512
+      max_shuffle_size: 64
+      num_workers: 0
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_tokens: 4096
+  data:
+    train:
+      class: StreamingMultiSourceDataset
+      lang_pairs: lt_LT-lt_LT_tgt,fi_FI-fi_FI_tgt,ar_AR-ar_AR_tgt,si_LK-si_LK_tgt,ro_RO-ro_RO_tgt,pt_XX-pt_XX_tgt,ta_IN-ta_IN_tgt,nl_XX-nl_XX_tgt,hr_HR-hr_HR_tgt,uk_UA-uk_UA_tgt,te_IN-te_IN_tgt,it_IT-it_IT_tgt,az_AZ-az_AZ_tgt,ko_KR-ko_KR_tgt,fa_IR-fa_IR_tgt,en_XX-en_XX_tgt,pl_PL-pl_PL_tgt,ne_NP-ne_NP_tgt,my_MM-my_MM_tgt,fr_XX-fr_XX_tgt,af_ZA-af_ZA_tgt,th_TH-th_TH_tgt,gu_IN-gu_IN_tgt,he_IL-he_IL_tgt,ml_IN-ml_IN_tgt,gl_ES-gl_ES_tgt,bn_IN-bn_IN_tgt,et_EE-et_EE_tgt,ps_AF-ps_AF_tgt,tr_TR-tr_TR_tgt,mn_MN-mn_MN_tgt,mr_IN-mr_IN_tgt,ka_GE-ka_GE_tgt,hi_IN-hi_IN_tgt,xh_ZA-xh_ZA_tgt,zh_CN-zh_CN_tgt,vi_VN-vi_VN_tgt,km_KH-km_KH_tgt,de_DE-de_DE_tgt,mk_MK-mk_MK_tgt,ja_XX-ja_XX_tgt,cs_CZ-cs_CZ_tgt,lv_LV-lv_LV_tgt,kk_KZ-kk_KZ_tgt,id_ID-id_ID_tgt,sl_SI-sl_SI_tgt,ur_PK-ur_PK_tgt,sv_SE-sv_SE_tgt,es_XX-es_XX_tgt,ru_RU-ru_RU_tgt
+      path: <train_path>
+      prefix: train.index
+      data_sizes: cc50_data_sizes.txt
+      size_threshold: 1
+      sample_strategy: TemperatureSampler
+      sample_strategy_args:
+        temperature: 1.5
+    valid:
+      class: MultiSourceDataset
+      lang_pairs: lt_LT-lt_LT_tgt,fi_FI-fi_FI_tgt,ar_AR-ar_AR_tgt,si_LK-si_LK_tgt,ro_RO-ro_RO_tgt,pt_XX-pt_XX_tgt,ta_IN-ta_IN_tgt,nl_XX-nl_XX_tgt,hr_HR-hr_HR_tgt,uk_UA-uk_UA_tgt,te_IN-te_IN_tgt,it_IT-it_IT_tgt,az_AZ-az_AZ_tgt,ko_KR-ko_KR_tgt,fa_IR-fa_IR_tgt,en_XX-en_XX_tgt,pl_PL-pl_PL_tgt,ne_NP-ne_NP_tgt,my_MM-my_MM_tgt,fr_XX-fr_XX_tgt,af_ZA-af_ZA_tgt,th_TH-th_TH_tgt,gu_IN-gu_IN_tgt,he_IL-he_IL_tgt,ml_IN-ml_IN_tgt,gl_ES-gl_ES_tgt,bn_IN-bn_IN_tgt,et_EE-et_EE_tgt,ps_AF-ps_AF_tgt,tr_TR-tr_TR_tgt,mn_MN-mn_MN_tgt,mr_IN-mr_IN_tgt,ka_GE-ka_GE_tgt,hi_IN-hi_IN_tgt,xh_ZA-xh_ZA_tgt,zh_CN-zh_CN_tgt,vi_VN-vi_VN_tgt,km_KH-km_KH_tgt,de_DE-de_DE_tgt,mk_MK-mk_MK_tgt,ja_XX-ja_XX_tgt,cs_CZ-cs_CZ_tgt,lv_LV-lv_LV_tgt,kk_KZ-kk_KZ_tgt,id_ID-id_ID_tgt,sl_SI-sl_SI_tgt,ur_PK-ur_PK_tgt,sv_SE-sv_SE_tgt,es_XX-es_XX_tgt,ru_RU-ru_RU_tgt
+      path: <valid_path>
+      prefix: valid.index
+  model:
+    class: HuggingfacePretrainMBartModel
+  criterion:
+    class: LabelSmoothedCrossEntropy
+    epsilon: 0.1
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 2e-4
+        total_steps: 700000
+        warmup_steps: 10000
+      clip_norm: 5.0
+      weight_decay: 1e-2
+      betas: (0.9, 0.98)
+      update_frequency: 1
+      eps: 1e-6
+    max_steps: 700000
+    validate_interval_step: 5000
+    assess_by: valid.criterion
+    assess_reverse: True
+    save_model_dir: checkpoints_pretrain
+env:
+  device: cuda
+  fp16: True
+  seed: 222

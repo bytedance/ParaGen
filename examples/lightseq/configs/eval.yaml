@@ -1,0 +1,37 @@
+task:
+  class: TranslationTask
+  mode: evaluate
+  src: de
+  tgt: en
+  maxlen: 256
+  index_only: True
+  tokenizer:
+    class: FastBPE
+    vocab: resources/vocabulary/vocab
+    add_bos: True
+    add_eos: True
+  dataloader:
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    test:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        de: data/test.de
+        en: data/test.en
+  evaluator:
+    class: Evaluator
+    metric:
+      bleu:
+        class: BLEU
+  generator:
+    class: LSLightseqTransformerGenerator
+    batch_size: 128
+    path: transformer.pb
+env:
+  device: cuda
+  fp16: True

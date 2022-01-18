@@ -1,0 +1,7 @@
+class: Vocabulary
+data:
+  class: ParallelTextDataset
+  path:
+    fr: data/train.fr
+    en: data/train.en
+output_path: resources/vocabulary/vocab

@@ -1,0 +1,80 @@
+define:
+  datapath: examples/bert/data
+task:
+  class: SequenceClassificationTask
+  requires_moses_tokenize: False
+  mode: train
+  label_name: 'label'
+  tokenizer:
+    class: SentencePieceTokenizer
+    spm_path: en.sp.model
+    bos_token: <s>
+    eos_token: </s>
+    add_bos: True
+    add_eos: True
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 32
+    dev:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 32
+  data:
+    train:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        input0: ${datapath}/SST-2/train.input0
+        label: ${datapath}/SST-2/train.label
+    dev:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        input0: ${datapath}/SST-2/dev.input0
+        label: ${datapath}/SST-2/dev.label
+  model:
+    class: BertModelForClassification
+    encoder:
+      class: TransformerEncoder
+      num_layers: 12
+      d_model: 768
+      n_head: 12
+      embed_scale: ~
+      dim_feedforward: 3072
+      dropout: 0.1      
+      attention_dropout: 0.1
+      activation: 'gelu'
+      learn_pos: True
+    d_model: 768
+    num_labels: 2
+    path: ckpt190.pt|mismatch
+  criterion:
+    class: CrossEntropy
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 1e-5
+        warmup_steps: 1256
+        total_steps: 20935
+      betas: (0.9, 0.98)
+      weight_decay: 0.01
+      eps: 1e-6
+    max_steps: 20935
+    validate_interval_epoch: 1
+    assess_by: acc
+  generator:
+    class: Generator
+  evaluator:
+    class: Evaluator
+    metric:
+      acc:
+        class: Accuracy
+env:
+  device: cuda

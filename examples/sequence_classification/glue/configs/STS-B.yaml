@@ -1,0 +1,66 @@
+task:
+  class: SequenceRegressionTask
+  mode: train
+  target_name: 'label'
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: roberta-base
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 64
+    dev:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        input0: data/STS-B/train.input0
+        input1: data/STS-B/train.input1
+        label: data/STS-B/train.label
+    dev:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        input0: data/STS-B/dev.input0
+        input1: data/STS-B/dev.input1
+        label: data/STS-B/dev.label
+  model:
+    class: HuggingfaceSequenceClassificationModel
+    pretrained_model: roberta-base
+    num_labels: 1
+  criterion:
+    class: MSE
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 5e-5
+        warmup_steps: 214
+        total_steps: 3598
+      betas: (0.9, 0.98)
+      weight_decay: 0.01
+      eps: 1e-6
+    max_steps: 3598
+    validate_interval_epoch: 1
+    assess_by: pearson
+  generator:
+    class: Generator
+    is_regression: True
+  evaluator:
+    class: Evaluator
+    metric:
+      pearson:
+        class: PearsonCorr
+      spearman:
+        class: SpearmanCorr
+env:
+  device: cuda

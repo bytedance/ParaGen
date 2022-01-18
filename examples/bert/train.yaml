@@ -1,0 +1,70 @@
+task:
+  class: MaskedLMTask
+  mode: train
+  src: en
+  maxlen: &maxlen 512
+  tokenizer:
+    class: Vocabulary
+    path: bert_data/en.sp.vocab
+    bos_token: <s>
+    eos_token: </s>
+    no_special_symbols: True
+  dataloader:
+    train:
+      class: StreamingDataLoader
+      batch_size: 32
+      num_workers: 1
+    valid:
+      class: StreamingDataLoader
+      batch_size: 32
+      num_workers: 0
+  data:
+    train:
+      class: StreamingTextDataset
+      path: bert_data/train
+    valid:
+      class: StreamingTextDataset
+      path: bert_data/valid
+  model:
+    class: BertModel
+    d_model: 768
+    encoder:
+      class: TransformerEncoder
+      num_layers: 12
+      d_model: 768
+      n_head: 12
+      embed_scale: False
+      embed_layer_norm: True
+      dim_feedforward: 3072
+      dropout: 0.1      
+      attention_dropout: 0.1
+      activation: 'gelu'
+      learn_pos: True
+  criterion:
+    class: SelfContainedLoss
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      update_frequency: 1
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 2e-4
+        total_steps: &total_steps 100000
+        warmup_steps: 24000
+      clip_norm: 0.0
+      betas: (0.9, 0.98)
+      eps: 1e-6
+      weight_decay: 1e-2
+    no_best_avg: True
+    max_steps: *total_steps
+    validate_interval_step: 2000
+    assess_by: valid.criterion
+    assess_reverse: True
+    save_model_dir: checkpoints
+    log_interval: 50
+env:
+  device: cuda
+  fp16: True
+  # device: cpu
+  no_progress_bar: True

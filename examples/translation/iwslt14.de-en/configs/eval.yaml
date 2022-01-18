@@ -1,0 +1,59 @@
+task:
+  class: TranslationTask
+  mode: evaluate
+  src: de
+  tgt: en
+  index_only: True
+  tokenizer:
+    class: FastBPE
+    vocab: resources/vocabulary/vocab
+    add_bos: True
+    add_eos: True
+  dataloader:
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    test:
+      class: ParallelTextDataset
+      path:
+        de: data/test.de
+        en: data/test.en
+  model:
+    class: Seq2Seq
+    encoder:
+      class: TransformerEncoder
+      num_layers: 6
+      d_model: 512
+      n_head: 4
+      dim_feedforward: 1024
+      dropout: 0.3
+      activation: 'relu'
+    decoder:
+      class: TransformerDecoder
+      num_layers: 6
+      d_model: 512
+      n_head: 4
+      dim_feedforward: 1024
+      dropout: 0.3
+      activation: 'relu'
+    share_embedding: decoder-input-output
+    d_model: 512
+    path: checkpoints/best.pt
+  generator:
+    class: SequenceGenerator
+    search:
+      class: BeamSearch
+      maxlen_coef: (1.2, 10)
+      beam: 5
+      lenpen: 0.6
+  evaluator:
+    class: Evaluator
+    metric:
+      bleu:
+        class: BLEU
+    save_hypo_dir: hypos
+env:
+  device: cuda

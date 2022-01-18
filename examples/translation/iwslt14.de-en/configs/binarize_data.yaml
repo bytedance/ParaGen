@@ -1,0 +1,25 @@
+task:
+  class: TranslationTask
+  mode: train
+  src: de
+  tgt: en
+  index_only: True
+  tokenizer:
+    class: FastBPE
+    vocab: resources/vocabulary/vocab
+    add_bos: True
+    add_eos: True
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_tokens: 16000
+  data:
+    train:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        de: data/train.de
+        en: data/train.en
+output_path: train.bin

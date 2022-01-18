@@ -1,0 +1,36 @@
+task:
+  class: TranslationTask
+  mode: preprocess
+  src: de
+  tgt: en
+  index_only: True
+  tokenizer:
+    class: FastBPE
+    vocab: resources/vocabulary/vocab
+    add_bos: True
+    add_eos: True
+dataset:
+  class: ParallelTextDataset
+  raw_data: True
+data:
+  train:
+    path:
+      de: data/train.de
+      en: data/train.en
+    output_path:
+      de: data/train.index.de
+      en: data/train.index.en
+  valid:
+    path:
+      de: data/valid.de
+      en: data/valid.en
+    output_path:
+      de: data/valid.index.de
+      en: data/valid.index.en
+  test:
+    path:
+      de: data/test.de
+      en: data/test.en
+    output_path:
+      de: data/test.index.de
+      en: data/test.index.en

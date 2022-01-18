@@ -1,0 +1,54 @@
+task:
+  class: ExtractiveQuestionAnsweringTask
+  mode: train
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: bert-base-uncased
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 12
+    dev:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 32
+  data:
+    train:
+      class: JsonDataset
+      path: train
+    dev:
+      class: JsonDataset
+      path: dev
+  model:
+    class: HuggingfaceExtractiveQuestionAnsweringModel
+    pretrained_model: bert-base-uncased
+  criterion:
+    class: SelfContainedLoss
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 3e-5
+        warmup_steps: 500
+        total_steps: 15000
+      betas: (0.9, 0.98)
+      weight_decay: 0.1
+      eps: 1e-6
+    max_epochs: 2
+    validate_interval_epoch: 1
+    assess_by: criterion
+    assess_reverse: True
+    save_model_dir: checkpoints
+  generator:
+    class: ExtractionGenerator
+    max_segment_length: 15
+  evaluator:
+    class: Evaluator
+    save_hypo_dir: hypos
+env:
+  device: cuda

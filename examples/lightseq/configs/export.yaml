@@ -1,0 +1,64 @@
+task:
+  class: TranslationTask
+  mode: train
+  src: de
+  tgt: en
+  maxlen: 256
+  index_only: True
+  tokenizer:
+    class: FastBPE
+    vocab: resources/vocabulary/vocab
+    add_bos: True
+    add_eos: True
+  dataloader:
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: BucketSampler
+        max_tokens: 16000
+  data:
+    valid:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        de: data/valid.de
+        en: data/valid.en
+  model:
+    class: Seq2Seq
+    encoder:
+      class: LSTransformerEncoder
+      num_layers: 6
+      d_model: 512
+      n_head: 4
+      dim_feedforward: 1024
+      dropout: 0.3
+      activation: 'relu'
+      normalize_before: True # only pre-norm transformer can be exported by LightSeq
+    decoder:
+      class: LSTransformerDecoder
+      num_layers: 6
+      d_model: 512
+      n_head: 4
+      dim_feedforward: 1024
+      dropout: 0.3
+      activation: 'relu'
+      output_bias: True # add bias to output logits
+      normalize_before: True # only pre-norm transformer can be exported by LightSeq
+    share_embedding: decoder-input-output
+    d_model: 512
+    path: checkpoints/last.pt
+  generator:
+    class: LSLightseqTransformerGenerator
+    batch_size: 128
+env:
+  device: cpu
+export:
+  path: transformer.pb
+  beam_size: 4
+  length_penalty: 0.6
+  extra_decode_length: 50
+  generation_method: beam_search
+  topk: 1
+  topp: 0.75
+  diverse_lambda: 0
+  lang: en

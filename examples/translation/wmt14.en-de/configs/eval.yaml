@@ -1,0 +1,58 @@
+task:
+  class: TranslationTask
+  mode: evaluate
+  src: en
+  tgt: de
+  index_only: True
+  tokenizer:
+    class: FastBPE
+    vocab: resources/vocab
+    add_bos: True
+    add_eos: True
+  data:
+    test:
+      class: InMemoryDataLoader
+      dataset:
+        class: ParallelTextDataset
+        sort_samples: False # do not sort samples if you use an outside eval script
+        path:
+          de: data/test.de
+          en: data/test.en
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  model:
+    class: Seq2Seq
+    encoder:
+      class: TransformerEncoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'relu'
+    decoder:
+      class: TransformerDecoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'relu'
+    d_model: 512
+  generator:
+    class: SequenceGenerator
+    search:
+      class: BeamSearch
+      maxlen_coef: (1, 50)
+      beam: 5
+      lenpen: 0.6
+  evaluator:
+    class: Evaluator
+    metric:
+      bleu:
+        class: BLEU
+    save_hypo_dir: examples/translation/wmt14.en-de/hypos
+env:
+  device: cuda
+  fp16: False

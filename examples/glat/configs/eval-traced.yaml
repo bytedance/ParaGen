@@ -1,0 +1,34 @@
+task:
+  class: GLATTranslationTask
+  mode: evaluate
+  src: en
+  tgt: de
+  maxlen: 256
+  index_only: True
+  tokenizer:
+    class: Tokenizer
+    vocab: examples/glat/zhouyi/resources/vocab
+    tokenize:
+      class: FastBPE
+  dataloader:
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 32
+  data:
+    test:
+      class: ParallelTextDataset
+      path:
+        de: examples/glat/zhouyi/data/test.en-de.de
+        en: examples/glat/zhouyi/data/test.en-de.en
+  generator:
+    class: GLATGenerator
+    path: traced_glat/cuda/model.pt
+  evaluator:
+    class: Evaluator
+    metric:
+      bleu:
+        class: BLEU
+env:
+  device: cuda

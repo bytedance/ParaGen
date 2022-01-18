@@ -1,0 +1,9 @@
+class: Vocabulary
+data:
+  class: ParallelTextDataset
+  path:
+    en: data/train.en
+    de: data/train.de
+output_path: resources/vocabulary/vocab
+vocab_size: 10000
+threshold: -1

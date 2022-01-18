@@ -1,0 +1,105 @@
+task:
+  class: TranslationTask
+  mode: train
+  src: en
+  tgt: de
+  maxlen: 256
+  index_only: True
+  tokenizer:
+    class: FastBPE
+    vocab: resources/vocab
+    add_bos: True
+    add_eos: True
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      num_workers: 0
+      sampler:
+        class: BucketSampler
+        max_tokens: 8000
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        de: data/train.en-de.de
+        en: data/train.en-de.en
+    valid:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        de: data/valid.en-de.de
+        en: data/valid.en-de.en
+    test:
+      class: ParallelTextDataset
+      sort_samples: True
+      path:
+        de: data/test.en-de.de
+        en: data/test.en-de.en
+  model:
+    class: Seq2Seq
+    encoder:
+      class: TransformerEncoder
+      num_layers: 6
+      d_model: 1024
+      n_head: 16
+      dim_feedforward: 4096
+      dropout: 0.3
+      activation: 'relu'
+    decoder:
+      class: TransformerDecoder
+      num_layers: 6
+      d_model: 1024
+      n_head: 16
+      dim_feedforward: 4096
+      dropout: 0.3
+      activation: 'relu'
+    share_embedding: decoder-input-output
+    d_model: 1024
+  criterion:
+    class: LabelSmoothedCrossEntropy
+    epsilon: 0.1
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: InverseSquareRootRateScheduler
+        rate: 1e-3
+        warmup_steps: 4000
+      clip_norm: 0.
+      betas: (0.9, 0.98)
+      eps: 1e-8
+      weight_decay: 1e-2
+    max_epochs: 100
+    max_steps: 1000000
+    validate_interval_step: 4000
+    assess_by: valid.criterion
+    assess_reverse: True
+    save_model_dir: checkpoints
+  generator:
+    class: SequenceGenerator
+    search:
+      class: BeamSearch
+      maxlen_coef: (1, 50)
+      beam: 4
+      lenpen: 0.6
+  evaluator:
+    class: Evaluator
+    metric:
+      bleu:
+        class: BLEU
+env:
+  device: cuda
+  fp16: True
+  no_progress_bar: True

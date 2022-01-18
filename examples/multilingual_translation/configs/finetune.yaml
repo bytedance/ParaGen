@@ -1,0 +1,85 @@
+task:
+  class: MultilingualTranslationTask
+  mode: train
+  langs: ML50_langs.txt
+  maxlen: 256
+  post_collate: True
+  preprocessed: True
+  tgt_langtok: replace_bos_token
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/mbart-large-50
+  dataloader:
+    train:
+      class: StreamingDataLoader
+      max_tokens: 1536
+      length_interval: 8
+      maxlen: 256
+      max_shuffle_size: 64
+      num_workers: 0
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_tokens: 2048
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_tokens: 2048
+  data:
+    train:
+      class: StreamingMultiSourceDataset
+      lang_pairs: id_ID-en_XX,it_IT-en_XX,mn_MN-en_XX,hr_HR-en_XX,tr_TR-en_XX,de_DE-en_XX,te_IN-en_XX,ml_IN-en_XX,lv_LV-en_XX,lt_LT-en_XX,pl_PL-en_XX,my_MM-en_XX,fi_FI-en_XX,th_TH-en_XX,he_IL-en_XX,ta_IN-en_XX,km_KH-en_XX,ar_AR-en_XX,bn_IN-en_XX,et_EE-en_XX,ka_GE-en_XX,sl_SI-en_XX,az_AZ-en_XX,gl_ES-en_XX,gu_IN-en_XX,pt_XX-en_XX,ro_RO-en_XX,ko_KR-en_XX,nl_XX-en_XX,hi_IN-en_XX,fa_IR-en_XX,ja_XX-en_XX,zh_CN-en_XX,ur_PK-en_XX,mk_MK-en_XX,ps_AF-en_XX,fr_XX-en_XX,kk_KZ-en_XX,uk_UA-en_XX,sv_SE-en_XX,ru_RU-en_XX,mr_IN-en_XX
+      path: preprocessed
+      prefix: train.index
+      data_sizes: train_data_sizes.txt
+      sample_strategy: TemperatureSampler
+      sample_strategy_args:
+        temperature: 1.5
+    valid:
+      class: MultiSourceDataset
+      lang_pairs: fr_XX-en_XX
+      path: preprocessed
+      prefix: valid.index
+    test:
+      class: MultiSourceDataset
+      lang_pairs: fr_XX-en_XX
+      path: preprocessed
+      prefix: test.index
+  model:
+    class: HuggingfacePretrainMBartModel
+    path: checkpoints_pretrain/last.pt
+  criterion:
+    class: LabelSmoothedCrossEntropy
+    epsilon: 0.2
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: InverseSquareRootRateScheduler
+        warmup_steps: 5000
+        rate: 2e-4
+      clip_norm: 0.
+      weight_decay: 0
+      betas: (0.9, 0.98)
+      update_frequency: 1
+      eps: 1e-6
+    max_steps: 600000
+    validate_interval_step: 5000
+    assess_by: valid.bleu
+    save_model_dir: checkpoints_finetune
+  generator:
+    class: SelfContainedGenerator
+    beam: 5
+    max_length: 100
+  evaluator:
+    class: Evaluator
+    metric:
+      bleu:
+        class: BLEU
+env:
+  device: cuda
+  fp16: True
+  seed: 42
