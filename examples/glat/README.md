@@ -11,10 +11,11 @@ We report `compound bleu` for completeness but we recommend to use `sacrebleu` f
 
 Fetch data by 
 ```bash
-wget https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/paragen/glat/kd_data.tgz
+wget https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/bycha/glat/kd_data.tgz
 tar -xvf kd_data.tgz
 
 ```
+The distilled data can also be downloaded from http://dl.fbaipublicfiles.com/nat/distill_dataset.zip .
 
 Train GLAT with 
 ```bash
