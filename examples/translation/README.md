@@ -46,9 +46,12 @@ paragen-preprocess --config configs/preprocess.yaml
 And then run the train scripts by setting `--task.preprocessed=True` in dataset configs in `*.yaml`.
 
 #### Evaluate model
+To evaluate a model, run
 ```bash
 paragen-run --config configs/eval.yaml
 ```
+In translation task, we use `sacrebleu` to evaluate the results by default.
+If you prefer `tokenized bleu`, set `--task.post_detok False --task.evaluator.metric.bleu.no_tok True`.
 
 #### Export the saved model 
 ```bash
