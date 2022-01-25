@@ -69,6 +69,16 @@ task:
       activation: 'gelu'
       learn_pos: True
       embed_layer_norm: True
+    aux_decoder:
+      class: NonAutoTransformerDecoder
+      num_layers: 2
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'gelu'
+      learn_pos: True
+      embed_layer_norm: True
     d_model: 512
     max_output_length: 256
     share_embedding: all
@@ -82,6 +92,9 @@ task:
       length:
         class: CrossEntropy
         weight: 0.1
+      aux_token:
+        class: LabelSmoothedCrossEntropy
+        weight: 0.5
   trainer:
     class: GLATTrainer
     optimizer:
