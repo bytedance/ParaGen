@@ -8,7 +8,10 @@ sequence-level classification, extraction and generation.
 
 * Install third-party dependent package:
 ```bash
-apt-get install libopenmpi-dev,libssl-dev,openssh-server
+# Ubuntu
+apt-get install libopenmpi-dev libssl-dev openssh-server
+# CentOS
+yum install openmpi openssl openssh-server
 ```
 * To install ParaGen from source:
 ```bash  
