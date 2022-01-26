@@ -5,6 +5,7 @@ task:
   tgt: de
   maxlen: 256
   index_only: True
+  share_vocab: False
   tokenizer:
     en:
       class: FastBPE
