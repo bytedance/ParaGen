@@ -18,10 +18,10 @@ yum install openmpi openssl openssh-server
 cd ParaGen
 pip install -e .
 ``` 
-* For distributed training, you need to make sure `horovod` has been installed.
+* For distributed training on multiple GPUs, you need to make sure `horovod` has been installed.
 ``` bash
 # require CMake to install horovod. (https://cmake.org/install/)
-pip install horovod
+HOROVOD_WITH_PYTORCH=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_NCCL_HOME=${NCCL_ROOT_DIR} pip install horovod
 ```
 * Install lightseq to faster train:
 ``` bash
