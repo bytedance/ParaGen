@@ -6,10 +6,16 @@ task:
   maxlen: 256
   index_only: True
   tokenizer:
-    class: FastBPE
-    vocab: resources/vocab
-    add_bos: True
-    add_eos: True
+    en:
+      class: FastBPE
+      vocab: data/dict.en.txt
+      add_bos: True
+      add_eos: True
+    de:
+      class: FastBPE
+      vocab: data/dict.de.txt
+      add_bos: True
+      add_eos: True
   dataloader:
     train:
       class: InMemoryDataLoader
@@ -30,7 +36,7 @@ task:
     train:
       class: ParallelTextDataset
       path:
-        de: data/train_distill.de
+        de: data/train.de
         en: data/train.en
     valid:
       class: ParallelTextDataset
@@ -71,7 +77,7 @@ task:
       embed_layer_norm: True
     d_model: 512
     max_output_length: 256
-    share_embedding: all
+    share_embedding: decoder-input-output
     decoder_input: unk
   criterion:
       class: LabelSmoothedCTC
