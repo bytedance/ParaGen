@@ -18,33 +18,12 @@ task:
       add_bos: True
       add_eos: True
   dataloader:
-    train:
-      class: InMemoryDataLoader
-      sampler:
-        class: BucketSampler
-        max_tokens: 8192  # train with 8 GPUs; BE ATTENTION to have 64k tokens within a batch.
-    valid:
-      class: InMemoryDataLoader
-      sampler:
-        class: SequentialSampler
-        max_samples: 128
     test:
       class: InMemoryDataLoader
       sampler:
         class: SequentialSampler
         max_samples: 128
   data:
-    train:
-      class: ParallelTextDataset
-      path:
-        de: data/train.de
-        en: data/train.en
-    valid:
-      class: ParallelTextDataset
-      sort_samples: True
-      path:
-        de: data/valid.de
-        en: data/valid.en
     test:
       class: ParallelTextDataset
       sort_samples: True
@@ -80,31 +59,7 @@ task:
     max_output_length: 256
     share_embedding: decoder-input-output
     decoder_input: unk
-  criterion:
-    class: MultiTaskCriterion
-    criterions:
-      token:
-        class: LabelSmoothedCrossEntropy
-        epsilon: 0.1
-      length:
-        class: CrossEntropy
-        weight: 0.1
-  trainer:
-    class: GLATTrainer
-    optimizer:
-      class: AdamW
-      lr:
-        class: InverseSquareRootRateScheduler
-        rate: 5e-4
-        warmup_steps: 4000
-      clip_norm: 0.
-      weight_decay: 1e-2
-      betas: (0.9, 0.999)
-    max_epochs: 200
-    max_steps: 300000
-    validate_interval_epoch: 1
-    assess_by: valid.bleu
-    save_model_dir: checkpoints
+    path: checkpoints/best_avg.pt
   generator:
     class: GLATGenerator
   evaluator:
