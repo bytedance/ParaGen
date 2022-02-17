@@ -56,7 +56,8 @@ class Environment:
                  fp16: bool = False,
                  no_progress_bar: bool = False,
                  pb_interval: int = 1,
-                 custom_libs: str = None):
+                 custom_libs: str = None,
+                 log_filename: str = None):
         self.profiling_window = profiling_window
         self.configs = configs
         self.debug = debug
@@ -65,6 +66,7 @@ class Environment:
         self.fp16 = fp16
         self.no_progress_bar = no_progress_bar
         self.pb_interval = pb_interval
+        self.log_filename = log_filename
 
         self.distributed_world = 1
         self.rank = 0
@@ -85,7 +87,7 @@ class Environment:
 
     def _init_log(self):
         FORMAT = f'%(asctime)s ｜ %(levelname)s | %(name)s |{f" RANK {self.rank} | " if not self.is_master() else " "}%(message)s'
-        logging.basicConfig(format=FORMAT, datefmt='%Y-%m-%d,%H:%M:%S', level=logging.INFO)
+        logging.basicConfig(filename=self.log_filename, format=FORMAT, datefmt='%Y-%m-%d,%H:%M:%S', level=logging.INFO)
         if not self.is_master():
             logging.disable(logging.INFO)
 
