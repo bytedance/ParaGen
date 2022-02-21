@@ -88,7 +88,7 @@ task:
         epsilon: 0.1
       length:
         class: CrossEntropy
-        weight: 0.1
+        weight: 0.05
   trainer:
     class: GLATTrainer
     optimizer:
