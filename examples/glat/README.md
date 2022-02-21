@@ -21,6 +21,13 @@ Train GLAT with
 ```bash
 paragen-run --config configs/train.yaml --lib glat
 ```
+The default configuration is trained with 8 GPUs. 
+Make sure to train GLAT with `64k` tokens within a batch if you are using less GPUs.
+
+After training, the model is evaluate with
+```bash
+paragen-run --config configs/eval.yaml --lib glat
+```
 
 # Serialize GLAT
 
