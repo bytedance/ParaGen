@@ -6,7 +6,7 @@ task:
   maxlen: 256
   index_only: True
   share_vocab: False
-  post_collate: False
+  post_detok: False
   tokenizer:
     en:
       class: FastBPE
