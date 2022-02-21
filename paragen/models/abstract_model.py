@@ -7,6 +7,7 @@ import torch.nn as nn
 from paragen.utils.runtime import Environment as E
 from paragen.utils.tensor import save_ckpt
 from paragen.utils.io import UniIO
+from paragen.utils.tensor import get_avg_ckpt
 
 
 class AbstractModel(nn.Module):
@@ -66,9 +67,9 @@ class AbstractModel(nn.Module):
             device: running device
             strict: load model strictly
         """
-        with UniIO(path, 'rb') as fin:
-            state_dict = torch.load(fin, map_location=device)
-            mismatched = self.load_state_dict(state_dict['model'] if 'model' in state_dict else state_dict, strict=strict)
+        paths = path.split(',')
+        state_dict = get_avg_ckpt(paths, device=device)
+        mismatched = self.load_state_dict(state_dict['model'] if 'model' in state_dict else state_dict, strict=strict)
 
         if not strict:
             logger.info("keys IN this model but NOT IN loaded model >>> ")
