@@ -61,7 +61,6 @@ task:
       dim_feedforward: 2048
       dropout: 0.1
       activation: 'gelu'
-      attention_dropout: 0.1
       return_seed: True
       learn_pos: True
       embed_scale: False
@@ -79,7 +78,7 @@ task:
     d_model: 512
     max_output_length: 256
     share_embedding: decoder-input-output
-    decoder_input: unk
+    decoder_input: encoder_mapping
   criterion:
     class: MultiTaskCriterion
     criterions:
@@ -100,6 +99,7 @@ task:
       clip_norm: 0.
       weight_decay: 1e-2
       betas: (0.9, 0.999)
+      eps: 1e-6
     max_epochs: 200
     max_steps: 300000
     validate_interval_epoch: 1
