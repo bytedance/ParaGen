@@ -1,11 +1,9 @@
 # Glancing Transformer ([Qian et.al](https://arxiv.org/abs/2008.07905))
 
-| Task | sacrebleu | tok bleu | compound bleu |
-| --- |-----------|----------|---------------|
-| WMT14 En-De | 24.40     | 25.01    | 25.88         |
-| WMT14 En-De (avg ckpt) | 24.58     | 25.19    | 26.07         |
-
-We report `compound bleu` for completeness but we recommend to use `sacrebleu` for future comparison.
+| Task                   | sacrebleu | tok bleu |
+|------------------------|-----------|----------|
+| WMT14 En-De            | 24.40     | 25.01    |
+| WMT14 En-De (avg ckpt) | 24.58     | 25.19    |
 
 # WMT14 En-De
 
