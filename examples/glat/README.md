@@ -1,33 +1,30 @@
 # Glancing Transformer ([Qian et.al](https://arxiv.org/abs/2008.07905))
 
-| Task | sacrebleu | tok bleu | compound bleu |
-| --- | --- | --- | --- |
-| WMT14 En-De | 24.59 | 24.82 | 25.14 |
-| WMT14 En-De (avg ckpt) | 24.69 | 24.91 | 25.24 |
-
-We report `compound bleu` for completeness but we recommend to use `sacrebleu` for future comparison.
+| Task                   | sacrebleu | tok bleu |
+|------------------------|-----------|----------|
+| WMT14 En-De            | 24.40     | 25.01    |
+| WMT14 En-De (avg ckpt) | 24.58     | 25.19    |
 
 # WMT14 En-De
 
 Fetch data by 
 ```bash
-wget https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/bycha/glat/kd_data.tgz
-tar -xvf kd_data.tgz
-
+wget http://dl.fbaipublicfiles.com/nat/distill_dataset.zip
+unzip distill_dataset.zip
 ```
-The distilled data can also be downloaded from http://dl.fbaipublicfiles.com/nat/distill_dataset.zip .
 
 Train GLAT with 
 ```bash
 paragen-run --config configs/train.yaml --lib glat
 ```
-The default configuration is trained with 8 GPUs. 
+Note we train our model on 8 V100-32G GPUs.
 Make sure to train GLAT with `64k` tokens within a batch if you are using less GPUs.
 
 After training, the model is evaluate with
 ```bash
 paragen-run --config configs/eval.yaml --lib glat
 ```
+>>>>>>> 70287285ec92825fd7cb15486db07952070029e3
 
 # Serialize GLAT
 

@@ -6,6 +6,7 @@ task:
   maxlen: 256
   index_only: True
   share_vocab: False
+  post_detok: False
   tokenizer:
     en:
       class: FastBPE
@@ -40,7 +41,6 @@ task:
       dim_feedforward: 2048
       dropout: 0.1
       activation: 'gelu'
-      attention_dropout: 0.1
       return_seed: True
       learn_pos: True
       embed_scale: False
@@ -59,7 +59,7 @@ task:
     max_output_length: 256
     share_embedding: decoder-input-output
     decoder_input: unk
-    path: checkpoints/best_avg.pt
+    path: checkpoint/checkpoint_last.pt
   generator:
     class: GLATGenerator
   evaluator:
@@ -67,6 +67,7 @@ task:
     metric:
       bleu:
         class: BLEU
+        no_tok: True
 env:
   device: cuda
   fp16: True

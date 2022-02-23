@@ -6,6 +6,7 @@ task:
   maxlen: 256
   index_only: True
   share_vocab: False
+  post_detok: False
   tokenizer:
     en:
       class: FastBPE
@@ -61,7 +62,6 @@ task:
       dim_feedforward: 2048
       dropout: 0.1
       activation: 'gelu'
-      attention_dropout: 0.1
       return_seed: True
       learn_pos: True
       embed_scale: False
@@ -88,7 +88,7 @@ task:
         epsilon: 0.1
       length:
         class: CrossEntropy
-        weight: 0.1
+        weight: 0.05
   trainer:
     class: GLATTrainer
     optimizer:
@@ -100,6 +100,7 @@ task:
       clip_norm: 0.
       weight_decay: 1e-2
       betas: (0.9, 0.999)
+      eps: 1e-6
     max_epochs: 200
     max_steps: 300000
     validate_interval_epoch: 1
@@ -112,6 +113,7 @@ task:
     metric:
       bleu:
         class: BLEU
+        no_tok: True
 env:
   device: cuda
   fp16: True
