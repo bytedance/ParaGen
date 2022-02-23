@@ -394,12 +394,14 @@ def get_avg_ckpt(ckpt_paths, device='cpu'):
             local_path = f'tmp.get.{path.split("/")[-1]}'
             subprocess.run(['hadoop', 'fs', '-get', path, local_path])
             with open(local_path, 'rb') as fin:
-                state_dict_list.append(torch.load(fin, map_location=device)['model'])
+                state_dict_list.append(torch.load(fin, map_location='cpu')['model'])
             subprocess.run(['rm', local_path])
         else:
             with open(path, 'rb') as fin:
-                state_dict_list.append(torch.load(fin, map_location=device)['model'])
+                state_dict_list.append(torch.load(fin, map_location='cpu')['model'])
     state_dict = average_checkpoints(state_dict_list)
+    if device != 'cpu':
+        state_dict = {k: v.to(device) for k, v in state_dict.items()}
     return {"model": state_dict}
 
 
