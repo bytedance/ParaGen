@@ -12,7 +12,7 @@ We report `compound bleu` for completeness but we recommend to use `sacrebleu` f
 Fetch data by 
 ```bash
 wget http://dl.fbaipublicfiles.com/nat/distill_dataset.zip
-tar -xvf kd_data.tgz
+unzip distill_dataset.zip
 ```
 
 Train GLAT with 
