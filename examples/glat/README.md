@@ -19,6 +19,8 @@ Train GLAT with
 ```bash
 paragen-run --config configs/train.yaml --lib glat
 ```
+Note we train our model on 8 V100-32G GPUs.
+Remind keeping max tokens within a training batch to 64k to obtain comparable results.
 
 # Serialize GLAT
 
