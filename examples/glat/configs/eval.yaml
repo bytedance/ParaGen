@@ -6,7 +6,7 @@ task:
   maxlen: 256
   index_only: True
   share_vocab: False
-  post_collate: False
+  post_detok: False
   tokenizer:
     en:
       class: FastBPE
@@ -59,32 +59,7 @@ task:
     max_output_length: 256
     share_embedding: decoder-input-output
     decoder_input: unk
-  criterion:
-    class: MultiTaskCriterion
-    criterions:
-      token:
-        class: LabelSmoothedCrossEntropy
-        epsilon: 0.1
-      length:
-        class: CrossEntropy
-        weight: 0.05
-  trainer:
-    class: GLATTrainer
-    optimizer:
-      class: AdamW
-      lr:
-        class: InverseSquareRootRateScheduler
-        rate: 5e-4
-        warmup_steps: 4000
-      clip_norm: 0.
-      weight_decay: 1e-2
-      betas: (0.9, 0.999)
-      eps: 1e-6
-    max_epochs: 200
-    max_steps: 300000
-    validate_interval_epoch: 1
-    assess_by: valid.bleu
-    save_model_dir: checkpoint
+    path: checkpoint/checkpoint_last.pt
   generator:
     class: GLATGenerator
   evaluator:
