@@ -38,6 +38,8 @@ class Evaluator(AbstractEvaluator):
         self._metric, self._postprocess = None, None
         self._env = None
 
+        self._random_indices = [random.randint(0, 100000000) for _ in range(self._display_samples)]
+
     def build(self, generator, dataloaders, tokenizer, task_callback=None, postprocess=None):
         """
         Build evaluator with given args.
@@ -169,8 +171,8 @@ class Evaluator(AbstractEvaluator):
                                                                 hypos,
                                                                 samples['text_output'] if 'text_output' in samples else [None for _ in hypos])
         info = ''
-        for _ in range(self._display_samples):
-            idx = random.randint(0, len(hypo_list) - 1)
+        for idx in self._random_indices:
+            idx = idx % len(hypo_list)
             info += '\n'
             if input_list[idx] is not None:
                 info += f'\tInput: {input_list[idx]}\n'
