@@ -63,8 +63,7 @@ class ImageClassificationTask(BaseTask):
             images = [self._transform_aug(img) for img in images]
         else:
             images = [self._transform(img) for img in images]
-        images = torch.cat([img.unsqueeze(0) for img in images], dim=0)
-        images_t = images.transpose(1, 2).transpose(2, 3).contiguous()
+        images_t = torch.cat([img.unsqueeze(0) for img in images], dim=0)
         labels_t = create_tensor(labels, int)
         batch = {
             'net_input': {
