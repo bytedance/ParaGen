@@ -1,0 +1,55 @@
+task:
+  class: ImageClassificationTask
+  mode: train
+  img_size: 32
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 128
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: ImageDataset
+      path: 3rdparty/image_classification/data/cifar/train
+    test:
+      class: ImageDataset
+      path: 3rdparty/image_classification/data/cifar/test
+  model:
+    class: TorchVisionModel
+    model: resnet50
+    num_classes: 100
+  criterion:
+    class: CrossEntropy
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: CosineAnnealingRateScheduler
+        warmup_steps: 1000
+        max_rate: 1e-3
+        total_steps: 100000
+      clip_norm: 1.
+      weight_decay: 1e-2
+      betas: (0.9, 0.999)
+    max_steps: 100000
+    validate_interval_epoch: 1
+    assess_by: test.acc
+    no_best_avg: True
+    save_model_dir: checkpoints
+  generator:
+    class: Generator
+  evaluator:
+    class: Evaluator
+    metric:
+      acc:
+        class: Accuracy
+env:
+  device: cuda
+  fp16: True
