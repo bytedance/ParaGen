@@ -24,7 +24,6 @@ After training, the model is evaluate with
 ```bash
 paragen-run --config configs/eval.yaml --lib glat
 ```
->>>>>>> 70287285ec92825fd7cb15486db07952070029e3
 
 # Serialize GLAT
 
