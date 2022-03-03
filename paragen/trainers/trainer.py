@@ -74,7 +74,7 @@ class Trainer(AbstractTrainer):
                  restore_path=None,
                  reset_optimizer=False,
                  reset_trainer=False,
-                 no_best_avg=False,
+                 no_best_avg=True,
                  enable_apex=False
                  ):
         super().__init__(max_epochs=max_epochs,
