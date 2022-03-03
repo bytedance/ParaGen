@@ -45,10 +45,13 @@ class MultiTaskCriterion(AbstractCriterion):
         """
         lprobs_dict = self._model(**net_input)
         assert isinstance(lprobs_dict, Dict), 'A multitask learning model must return a dict of log-probability'
+        return self.compute_loss(lprobs_dict, **net_output)
+
+    def compute_loss(self, lprobs, **net_output):
         # fetch target with default index 0
         tot_loss, complete_logging_states = 0, {}
         for name in self._names:
-            lprobs, net_out, criterion = lprobs_dict[name], net_output[name], self._criterions[name]
+            lprobs, net_out, criterion = lprobs[name], net_output[name], self._criterions[name]
             loss, logging_states = criterion.compute_loss(lprobs, **net_out)
             tot_loss += self._weights[name] * loss
             logging_states = {f'{name}.{key}': val for key, val in logging_states.items()}
