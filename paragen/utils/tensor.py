@@ -1,3 +1,4 @@
+import os.path
 from collections import OrderedDict
 from contextlib import contextmanager
 from typing import Dict, List, Tuple
@@ -12,7 +13,7 @@ from torch.cuda.amp import GradScaler, autocast
 from torch.multiprocessing import Process
 import torch
 
-from paragen.utils.io import wait_until_exist
+from paragen.utils.io import TEMP_IO_SAVE_PATH, wait_until_exist
 from paragen.utils.ops import recursive
 from paragen.utils.runtime import Environment, singleton
 
@@ -363,7 +364,7 @@ def save_ckpt(state_dict, path, retry=5, wait=False):
     def _save(state_dict, path):
         for _ in range(retry):
             try:
-                tmp_path = f"tmp.put.{path.split('/')[-1]}"
+                tmp_path = os.path.join(TEMP_IO_SAVE_PATH, f"tmp.put.{path.split('/')[-1]}")
                 with open(tmp_path, 'wb') as fout:
                     torch.save(state_dict, fout)
                 if path.startswith('hdfs:'):
@@ -391,7 +392,7 @@ def get_avg_ckpt(ckpt_paths, device='cpu'):
     state_dict_list = []
     for path in ckpt_paths:
         if path.startswith('hdfs:'):
-            local_path = f'tmp.get.{path.split("/")[-1]}'
+            local_path = os.path.join(TEMP_IO_SAVE_PATH, f'tmp.get.{path.split("/")[-1]}')
             subprocess.run(['hadoop', 'fs', '-get', path, local_path])
             with open(local_path, 'rb') as fin:
                 state_dict_list.append(torch.load(fin, map_location='cpu')['model'])
