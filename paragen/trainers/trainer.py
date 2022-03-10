@@ -517,19 +517,20 @@ class Trainer(AbstractTrainer):
         assert self._env.is_master(), "only master process is allowed to save models"
         name = f'updates-{self._tot_step_cnt}.epochs-{self._epoch_cnt}'
 
-        state_dict = self.state_dict()
-
         path = f'{self._save_model_dir}/last.{name}.pt'
         self._save_last.append(path)
 
+        while len(self._save_last) > self._save_last_k:
+            rm_path = self._save_last.pop(0)
+            logger.info(f'remove last checkpoint at {rm_path}')
+            remove(rm_path)
+
         logger.info(f'save last k checkpoint to {path}')
+        state_dict = self.state_dict()
         save_ckpt(state_dict, path)
+
         logger.info(f'copy the last checkpoint to {self._save_model_dir}/last.pt')
         cp(path, f'{self._save_model_dir}/last.pt')
-        if len(self._save_last) > self._save_last_k:
-            path = self._save_last.pop(0)
-            logger.info(f'remove last checkpoint at {path}')
-            remove(path)
 
         assert len(self._save_last) <= self._save_last_k, f'size of save_last must be <= save_last_k, {self._save_last}'
         logger.info('Saving Done.')
