@@ -90,6 +90,8 @@ class Environment:
         logging.basicConfig(filename=self.log_filename, format=FORMAT, datefmt='%Y-%m-%d,%H:%M:%S', level=logging.INFO)
         if not self.is_master():
             logging.disable(logging.INFO)
+        if not self.debug:
+            logging.disable(logging.DEBUG)
 
     def _import_custom_lib(self, path):
         """
