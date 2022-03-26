@@ -150,6 +150,8 @@ class TranslationTask(BaseTask):
                     val = self._tokenizer[key].detok(val)
                 if self._post_detok and not self._requires_moses_tokenize:
                     val = self._moses_detokenize[key](val.split())
+                if self._use_compound:
+                    val = val.replace(' @-@ ', '-').replace(' -', '-').replace('- ', '-').replace('-', ' @-@ ')
                 sample[key] = val
 
         inputs = {key: val for key, val in sample.items() if key != self._tgt}
@@ -238,7 +240,7 @@ class TranslationTask(BaseTask):
             output = self._tokenizer[self._tgt].decode(output)
             if self._post_detok:
                 output = self._moses_detokenize[self._tgt](output.split())
-            elif self._use_compound:
+            if self._use_compound:
                 output = output.replace(' @-@ ', '-').replace(' -', '-').replace('- ', '-').replace('-', ' @-@ ')
             processed_outputs.append(output)
         return processed_outputs
