@@ -37,7 +37,6 @@ class TranslationTask(BaseTask):
                  share_vocab=True,
                  index_only=False,
                  post_detok=True,
-                 use_compound=False,
                  **kwargs
                  ):
         super().__init__(**kwargs)
@@ -48,7 +47,6 @@ class TranslationTask(BaseTask):
         self._index_only = index_only
         self._requires_moses_tokenize = requires_moses_tokenize
         self._post_detok = post_detok
-        self._use_compound = use_compound and not post_detok
 
         if self._requires_moses_tokenize:
             self._moses_tokenize = {lang: MosesTokenizer(lang=lang) for lang in [src, tgt]}
@@ -150,8 +148,6 @@ class TranslationTask(BaseTask):
                     val = self._tokenizer[key].detok(val)
                 if self._post_detok and not self._requires_moses_tokenize:
                     val = self._moses_detokenize[key](val.split())
-                if self._use_compound:
-                    val = val.replace(' @-@ ', '-').replace(' -', '-').replace('- ', '-').replace('-', ' @-@ ')
                 sample[key] = val
 
         inputs = {key: val for key, val in sample.items() if key != self._tgt}
@@ -240,8 +236,6 @@ class TranslationTask(BaseTask):
             output = self._tokenizer[self._tgt].decode(output)
             if self._post_detok:
                 output = self._moses_detokenize[self._tgt](output.split())
-            if self._use_compound:
-                output = output.replace(' @-@ ', '-').replace(' -', '-').replace('- ', '-').replace('-', ' @-@ ')
             processed_outputs.append(output)
         return processed_outputs
 
