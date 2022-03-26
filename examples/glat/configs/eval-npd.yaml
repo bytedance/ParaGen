@@ -1,6 +1,6 @@
 task:
   class: GLATTranslationTask
-  mode: train
+  mode: evaluate
   src: en
   tgt: de
   maxlen: 256
