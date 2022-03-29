@@ -38,20 +38,20 @@ task:
     train:
       class: ParallelTextDataset
       path:
-        de: data/train.de
-        en: data/train.en
+        de: data/train.en-de.de
+        en: data/train.en-de.en
     valid:
       class: ParallelTextDataset
       sort_samples: True
       path:
-        de: data/valid.de
-        en: data/valid.en
+        de: data/valid.en-de.de
+        en: data/valid.en-de.en
     test:
       class: ParallelTextDataset
       sort_samples: True
       path:
-        de: data/test.de
-        en: data/test.en
+        de: data/test.en-de.de
+        en: data/test.en-de.en
   model:
     class: GLATModel
     encoder:
