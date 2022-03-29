@@ -132,6 +132,9 @@ class GLATModel(AbstractEncoderDecoderModel):
             decoder_input = create_sequence(tgt_padding_mask,
                                             self._tgt_special_tokens['unk'],
                                             pad_id=self._tgt_special_tokens['pad'])
+            decoder_input[:, 0] = self._tgt_special_tokens['bos']
+            length_tgt = ((~tgt_padding_mask).int()).sum(dim=-1)
+            decoder_input.scatter_(1, length_tgt[:, None] - 1, self._tgt_special_tokens['eos'])
             decoder_embed = self._decoder_embed(decoder_input)
         elif self._decoder_input == 'encoder_mapping':
             decoder_embed = decoder_encoder_map(self._encoder.get('token_embed'),

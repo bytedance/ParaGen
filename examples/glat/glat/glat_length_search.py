@@ -5,20 +5,21 @@ from paragen.utils.ops import local_seed
 from paragen.modules.utils import create_padding_mask_from_length
 from paragen.modules.search.abstract_search import AbstractSearch
 
-"""
-Args: window_size L
 
-input: length [B], encoder_out [S * B * D], encoder_padding_mask [B * S]
-
-mid: l' in [length-window_size, length+window_size] [B, 2*L+1]
-predict sequennce candidate for each l' [B, 2 * L + 1, 2 * L + 1], [B, 2 * L + 1]
-rerank candidates [B, 2*L+1]
-
-output: sequence
-"""
 class GLATLengthSearcher(AbstractSearch):
+    """
+    Args: window_size L
+
+    input: length [B], encoder_out [S * B * D], encoder_padding_mask [B * S]
+
+    mid: l' in [length-window_size, length+window_size] [B, 2*L+1]
+    predict sequennce candidate for each l' [B, 2 * L + 1, 2 * L + 1], [B, 2 * L + 1]
+    rerank candidates [B, 2*L+1]
+
+    output: sequence
+    """
     def __init__(self,
-                 window_size=5,
+                 window_size=3,
                  max_len=256,
                  seed=None,
                  padding_token=None,
@@ -36,9 +37,9 @@ class GLATLengthSearcher(AbstractSearch):
         pass
 
     def forward(self, 
-               length: Tensor,
-               src_padding_mask: Tensor,
-               src_hidden: Tensor) -> Tensor:
+                length: Tensor,
+                src_padding_mask: Tensor,
+                src_hidden: Tensor) -> Tensor:
         _lower_bound = torch.tensor(1).to(length)
         _upper_bound = torch.tensor(self._max_len).to(length)
         maxlen = torch.minimum(_upper_bound, length.max() + self._window_size)
