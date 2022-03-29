@@ -6,13 +6,12 @@ import torch
 import torch.nn as nn
 
 from paragen.generators import AbstractGenerator, register_generator
+from paragen.modules.search import create_search
 from paragen.modules.utils import create_padding_mask_from_length
 from paragen.utils.io import mkdir, UniIO, cp
 from paragen.utils.ops import local_seed
 from paragen.utils.runtime import Environment
 from paragen.utils.tensor import to_device
-
-from .glat_length_search import GLATLengthSearcher
 
 
 @register_generator
@@ -53,15 +52,14 @@ class GLATGenerator(AbstractGenerator):
         self._encoder, self._decoder = model.encoder, model.decoder
         self._length_predictor, self._calc_decoder_input = model.length_predictor, model.calc_decoder_input
         self._src_special_tokens, self._tgt_special_tokens = src_special_tokens, tgt_special_tokens
-        window_size = self._search_configs.get('window_size', None) \
-                        if self._search_configs is not None else None
-        if window_size is not None:
-            self._length_searcher = GLATLengthSearcher(window_size=window_size,
-                                                       max_len=self._model._max_output_length,
-                                                       seed=self.seed,
-                                                       padding_token=self._tgt_special_tokens['pad'],
-                                                       calc_decoder_input=self._calc_decoder_input,
-                                                       decoder=self._decoder)
+
+        if self._search_configs is not None:
+            self._length_searcher = create_search(self._search_configs)
+            self._length_searcher.build(maxlen=self._model._max_output_length,
+                                        seed=self.seed,
+                                        padding_token=self._tgt_special_tokens['pad'],
+                                        calc_decoder_input=self._calc_decoder_input,
+                                        decoder=self._decoder)
 
     def _forward(self, src, tgt_padding_mask=None):
         """
