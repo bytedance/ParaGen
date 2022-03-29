@@ -37,7 +37,7 @@ class GLATLengthSearcher(AbstractSearch):
               padding_token=None,
               calc_decoder_input: Callable[[Tensor, Tensor], Tensor] = None,
               decoder=None):
-        self._maxlen = 10
+        self._maxlen = maxlen
         self._seed = seed
         self._padding_token = padding_token
         self._calc_decoder_input = calc_decoder_input
