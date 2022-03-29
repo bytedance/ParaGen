@@ -58,8 +58,8 @@ class GLATLengthSearcher(AbstractSearch):
         candidates, scores = self._search(length, maxlen, src_padding_mask, src_hidden)
         candidates = candidates.reshape(bsz, self._beam, -1)
         scores = scores.reshape(bsz, self._beam)
-        best_idxs = scores.max(dim=1).indices
-        outputs = candidates.gather(1, best_idxs[:, None, None].repeat(1, 1, maxlen)).squeeze(1)
+        best_idx = scores.max(dim=1).indices
+        outputs = candidates.gather(1, best_idx[:, None, None].repeat(1, 1, maxlen)).squeeze(1)
         return outputs
 
     def _search(self,
