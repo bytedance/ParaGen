@@ -64,7 +64,7 @@ task:
     class: GLATGenerator
     search:
       class: GLATLengthSearcher
-      beam: 3
+      beam: 7
   evaluator:
     class: Evaluator
     metric:
