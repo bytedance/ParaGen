@@ -40,7 +40,7 @@ class GLATLengthSearcher(AbstractSearch):
                 length: Tensor,
                 src_padding_mask: Tensor,
                 src_hidden: Tensor) -> Tensor:
-        _lower_bound = torch.tensor(1).to(length)
+        _lower_bound = torch.tensor(2).to(length)
         _upper_bound = torch.tensor(self._max_len).to(length)
         maxlen = torch.minimum(_upper_bound, length.max() + self._window_size)
         candidates = list()
