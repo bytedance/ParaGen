@@ -158,6 +158,8 @@ class TranslationTask(BaseTask):
         processed_sample['text_input'] = inputs
 
         if self._tgt in textual_sample:
+            if not self._post_detok:
+                sample[self._tgt] = split_compound(sample[self._tgt])
             processed_sample['text_output'] = sample[self._tgt]
         return processed_sample
 
@@ -236,6 +238,8 @@ class TranslationTask(BaseTask):
             output = self._tokenizer[self._tgt].decode(output)
             if self._post_detok:
                 output = self._moses_detokenize[self._tgt](output.split())
+            else:
+                output = split_compound(output)
             processed_outputs.append(output)
         return processed_outputs
 
@@ -264,3 +268,7 @@ class TranslationTask(BaseTask):
                                bos=self._tokenizer[self._tgt].bos,
                                eos=self._tokenizer[self._tgt].eos,
                                **kwargs)
+
+
+def split_compound(x):
+    return ' @-@ '.join([z.strip() for t in x.split('@-@') for z in t.split('-')])
