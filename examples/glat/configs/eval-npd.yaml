@@ -27,6 +27,7 @@ task:
   data:
     test:
       class: ParallelTextDataset
+      sort_samples: True
       path:
         de: data/test.en-de.de
         en: data/test.en-de.en
