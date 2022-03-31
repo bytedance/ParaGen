@@ -33,7 +33,7 @@ class GLATModel(AbstractEncoderDecoderModel):
                  d_model,
                  max_output_length=1024,
                  share_embedding=None,
-                 decoder_input='encoder_mapping',
+                 decoder_input='uniform_copy',
                  path=None):
         super().__init__(path=path)
         self._encoder_config, self._decoder_config = encoder, decoder
@@ -136,10 +136,10 @@ class GLATModel(AbstractEncoderDecoderModel):
             length_tgt = ((~tgt_padding_mask).int()).sum(dim=-1)
             decoder_input.scatter_(1, length_tgt[:, None] - 1, self._tgt_special_tokens['eos'])
             decoder_embed = self._decoder_embed(decoder_input)
-        elif self._decoder_input == 'encoder_mapping':
-            decoder_embed = decoder_encoder_map(self._encoder.get('token_embed'),
-                                                src_padding_mask,
-                                                tgt_padding_mask)
+        elif self._decoder_input == 'uniform_copy':
+            decoder_embed = uniform_copy(self._encoder.get('token_embed'),
+                                         src_padding_mask,
+                                         tgt_padding_mask)
         else:
             raise NotImplementedError
 
@@ -186,7 +186,7 @@ class GLATModel(AbstractEncoderDecoderModel):
         return self._length_predictor
 
 
-def decoder_encoder_map(encoder_embed, encoder_padding_mask, decoder_padding_mask):
+def uniform_copy(encoder_embed, encoder_padding_mask, decoder_padding_mask):
     """
     assign encoder embedding to decoder one
 
