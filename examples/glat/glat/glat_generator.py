@@ -86,7 +86,8 @@ class GLATGenerator(AbstractGenerator):
             tgt_length = tgt_length.max(dim=-1).indices
             tgt_padding_mask = create_padding_mask_from_length(tgt_length)
         decoder_input = self._calc_decoder_input(src_padding_mask,
-                                                 tgt_padding_mask)
+                                                 tgt_padding_mask,
+                                                 source=src)
         with local_seed(self.seed):
             logits = self._decoder(decoder_input, src_hidden, tgt_padding_mask, src_padding_mask)
         _, decoder_output = logits.max(dim=-1)
