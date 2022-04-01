@@ -43,7 +43,7 @@ class GLATModel(AbstractEncoderDecoderModel):
         self._decoder_input = decoder_input
         self._path = path
 
-        self._decoder_embed = None
+        self._encoder_embed, self._decoder_embed = None, None
         self._length_predictor = None
         self._src_special_tokens, self._tgt_special_tokens = None, None
         self._seed = 0
@@ -73,7 +73,7 @@ class GLATModel(AbstractEncoderDecoderModel):
                             special_tokens=tgt_special_tokens,
                             out_proj=tgt_out_proj)
 
-        self._decoder_embed = tgt_embed
+        self._encoder_embed, self._decoder_embed = src_embed, tgt_embed
         self._length_predictor = LinearClassifier(d_model=self._d_model,
                                                   labels=self._max_output_length,
                                                   invalid_classes=[0])
@@ -102,8 +102,9 @@ class GLATModel(AbstractEncoderDecoderModel):
         length_logits = self._length_predictor(cls_token)
         decoder_embed = self.calc_decoder_input(src_padding_mask,
                                                 tgt_padding_mask,
-                                                target,
-                                                fusing_target_mask)
+                                                source=src,
+                                                target=target,
+                                                fusing_target_mask=fusing_target_mask)
         with local_seed(self.seed):
             logits = self._decoder(tgt=decoder_embed,
                                    memory=src_hidden,
@@ -114,6 +115,7 @@ class GLATModel(AbstractEncoderDecoderModel):
     def calc_decoder_input(self,
                            src_padding_mask,
                            tgt_padding_mask,
+                           source=None,
                            target=None,
                            fusing_target_mask=None):
         """
@@ -137,7 +139,7 @@ class GLATModel(AbstractEncoderDecoderModel):
             decoder_input.scatter_(1, length_tgt[:, None] - 1, self._tgt_special_tokens['eos'])
             decoder_embed = self._decoder_embed(decoder_input)
         elif self._decoder_input == 'uniform_copy':
-            decoder_embed = uniform_copy(self._encoder.get('token_embed'),
+            decoder_embed = uniform_copy(self._encoder_embed(source),
                                          src_padding_mask,
                                          tgt_padding_mask)
         else:
