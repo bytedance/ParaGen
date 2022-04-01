@@ -143,3 +143,7 @@ class FastBPE(AbstractTokenizer):
     @property
     def unk_token(self):
         return self._vocab.unk_token
+
+    @property
+    def special_tokens(self):
+        return self._vocab.special_tokens
