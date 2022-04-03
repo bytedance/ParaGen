@@ -54,6 +54,7 @@ class GLATLengthSearcher(AbstractSearch):
         length = length.clamp(2, self._maxlen)
         length = length.reshape(-1)
         maxlen = length.max()
+        src = src[:, None].repeat(1, self._beam, 1).reshape(bsz * self._beam, -1)
         src_padding_mask = src_padding_mask[:, None].repeat(1, self._beam, 1).reshape(bsz * self._beam, -1)
         src_hidden = src_hidden[:, :, None].repeat(1, 1, self._beam, 1).reshape(srclen, bsz * self._beam, -1)
         candidates, scores = self._search(length, maxlen, src, src_padding_mask, src_hidden)
