@@ -43,8 +43,9 @@ class GLATLengthSearcher(AbstractSearch):
         self._calc_decoder_input = calc_decoder_input
         self._decoder = decoder
 
-    def forward(self, 
+    def forward(self,
                 length: Tensor,
+                src: Tensor,
                 src_padding_mask: Tensor,
                 src_hidden: Tensor) -> Tensor:
         bsz, srclen = src_padding_mask.shape
@@ -55,7 +56,7 @@ class GLATLengthSearcher(AbstractSearch):
         maxlen = length.max()
         src_padding_mask = src_padding_mask[:, None].repeat(1, self._beam, 1).reshape(bsz * self._beam, -1)
         src_hidden = src_hidden[:, :, None].repeat(1, 1, self._beam, 1).reshape(srclen, bsz * self._beam, -1)
-        candidates, scores = self._search(length, maxlen, src_padding_mask, src_hidden)
+        candidates, scores = self._search(length, maxlen, src, src_padding_mask, src_hidden)
         candidates = candidates.reshape(bsz, self._beam, -1)
         scores = scores.reshape(bsz, self._beam)
         best_idx = scores.max(dim=1).indices
@@ -65,10 +66,11 @@ class GLATLengthSearcher(AbstractSearch):
     def _search(self,
                 length: Tensor,
                 maxlen,
+                src: Tensor,
                 src_padding_mask: Tensor,
                 src_hidden: Tensor) -> Tuple[Tensor, Tensor]:
         tgt_padding_mask = create_padding_mask_from_length(length, maxlen)
-        decoder_input = self._calc_decoder_input(src_padding_mask, tgt_padding_mask)
+        decoder_input = self._calc_decoder_input(src_padding_mask, tgt_padding_mask, source=src)
         with local_seed(self._seed):
             logits = self._decoder(decoder_input,
                                    src_hidden,

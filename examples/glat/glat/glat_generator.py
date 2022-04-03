@@ -78,7 +78,7 @@ class GLATGenerator(AbstractGenerator):
         if (tgt_padding_mask is None) and (self._length_searcher is not None):
             tgt_length = self._length_predictor(length_token)
             tgt_length = tgt_length.max(dim=-1).indices
-            decoder_output = self._length_searcher(tgt_length, src_padding_mask, src_hidden)
+            decoder_output = self._length_searcher(tgt_length, src, src_padding_mask, src_hidden)
             return decoder_output
 
         if tgt_padding_mask is None:
