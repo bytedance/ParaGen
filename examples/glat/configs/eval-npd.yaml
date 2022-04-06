@@ -11,8 +11,6 @@ task:
     en:
       class: FastBPE
       vocab: data/dict.en.txt
-      add_bos: True
-      add_eos: True
     de:
       class: FastBPE
       vocab: data/dict.de.txt
@@ -40,6 +38,7 @@ task:
       n_head: 8
       dim_feedforward: 2048
       dropout: 0.1
+      attention_dropout: 0.1
       activation: 'gelu'
       return_seed: True
       learn_pos: True
@@ -52,6 +51,7 @@ task:
       n_head: 8
       dim_feedforward: 2048
       dropout: 0.1
+      attention_dropout: 0.1
       activation: 'gelu'
       learn_pos: True
       embed_layer_norm: True
