@@ -9,12 +9,12 @@ class BLEU(PairwiseMetric):
     BLEU evaluates BLEU scores of produced hypotheses by comparing with references.
     """
 
-    def __init__(self, no_tok=False, lang='en'):
+    def __init__(self, no_tok=False, lang='en', **kwargs):
         super().__init__()
         self._no_tok = no_tok
         self._lang = lang
 
-        self._sacrebleu_kwargs = {}
+        self._sacrebleu_kwargs = kwargs
         if self._no_tok:
             self._sacrebleu_kwargs['tokenize'] = 'none'
         else:
