@@ -11,6 +11,8 @@ task:
     en:
       class: FastBPE
       vocab: data/dict.en.txt
+      add_bos: True
+      add_eos: True
     de:
       class: FastBPE
       vocab: data/dict.de.txt
