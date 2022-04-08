@@ -42,7 +42,14 @@ class Optimizer:
             self.multiply_grads(1. / self._update_frequency)
 
         if self._clip_norm > 0:
-            torch.nn.utils.clip_grad_norm_(self._model.parameters(), self._clip_norm)
+            grads = [p.grad for p in self._model.parameters() if p.grad is not None]
+            total_norm = torch.norm(
+                torch.stack(
+                    [torch.norm(g, p=2, dtype=torch.float32).to(grads[0]) for g in grads]
+                )
+            )
+            clip_coef = (self._clip_norm / (total_norm + 1e-6)).clamp_(max=1)
+            self.multiply_grads(clip_coef)
 
         if self._env.fp16 and not self._enable_apex:
             with self._possible_skip_synchronize():
