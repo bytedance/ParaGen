@@ -2,9 +2,8 @@
 
 | Task                   | sacrebleu | tok bleu |
 |------------------------|-----------|----------|
-| WMT14 En-De            | 24.40     | 25.01    |
-| WMT14 En-De (avg ckpt) | 24.58     | 25.19    |
-| WMT14 En-De (avg ckpt, NPD=7) |   |    |
+| WMT14 En-De            | 24.40     | 24.98    |
+| WMT14 En-De (avg ckpt) | 24.58     | 25.29    |
 
 # WMT14 En-De
 
