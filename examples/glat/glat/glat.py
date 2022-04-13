@@ -97,7 +97,8 @@ class GLATModel(AbstractEncoderDecoderModel):
                 - **token**: log probability of predicted tokens
                 - **length**: log probability of length
         """
-        src_hidden, src_padding_mask, cls_token = self._encoder(src=src)
+        with local_seed(self.seed):
+            src_hidden, src_padding_mask, cls_token = self._encoder(src=src)
 
         length_logits = self._length_predictor(cls_token)
         decoder_embed = self.calc_decoder_input(src_padding_mask,

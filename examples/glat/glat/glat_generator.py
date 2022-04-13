@@ -73,7 +73,8 @@ class GLATGenerator(AbstractGenerator):
         Returns:
             decoder_output: results inferred by search algorithm on decoder
         """
-        src_hidden, src_padding_mask, length_token = self._encoder(src)
+        with local_seed(self.seed):
+            src_hidden, src_padding_mask, length_token = self._encoder(src)
 
         if (tgt_padding_mask is None) and (self._length_searcher is not None):
             tgt_length = self._length_predictor(length_token)
