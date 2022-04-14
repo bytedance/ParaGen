@@ -12,6 +12,8 @@ sequence-level classification, extraction and generation.
 apt-get install libopenmpi-dev libssl-dev openssh-server
 # CentOS
 yum install openmpi openssl openssh-server
+# Conda
+conda install -c conda-forge mpi4py
 ```
 * To install ParaGen from source:
 ```bash  

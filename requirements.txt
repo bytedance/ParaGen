@@ -1,6 +1,5 @@
 torch
 transformers
-tensorflow==2.4.0
 tqdm
 sacremoses
 sacrebleu
@@ -11,8 +10,6 @@ scikit-learn
 mosestokenizer
 nltk
 pyyaml
-mpi4py
 numpy==1.19.2
 more-itertools
 tabulate
-lightseq
