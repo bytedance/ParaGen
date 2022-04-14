@@ -72,8 +72,7 @@ class GLATTranslationTask(TranslationTask):
         samples = [sample for sample in samples if len(sample[self._src]) > 0 and len(sample[self._tgt]) > 0]
         samples = reorganize(samples)
         src = [[self._tokenizer[self._src].special_tokens['len']] + s for s in samples[self._src]]
-        if self._training:
-            src = [v[:self._maxlen] for v in src]
+        src = [v[:self._maxlen] for v in src]
         src = convert_idx_to_tensor(src, pad=self._tokenizer[self._src].pad)
         if not self._infering:
             tgt = samples[self._tgt]
