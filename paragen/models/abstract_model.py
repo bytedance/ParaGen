@@ -1,12 +1,10 @@
 import logging
 logger = logging.getLogger(__name__)
 
-import torch
 import torch.nn as nn
 
 from paragen.utils.runtime import Environment as E
 from paragen.utils.tensor import save_ckpt
-from paragen.utils.io import UniIO
 from paragen.utils.tensor import get_avg_ckpt
 
 

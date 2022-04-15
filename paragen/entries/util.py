@@ -14,6 +14,7 @@ def parse_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', metavar='N', type=str, help='config path')
     parser.add_argument('--lib', metavar='N', default=None, type=str, help='customization package')
+    parser.add_argument('--local_rank', metavar='N', default=0, type=int, help='local rank when use ddp')
     args, unknown = parser.parse_known_args()
     with UniIO(args.config) as fin:
         confs = yaml.load(fin, Loader=yaml.FullLoader)
@@ -42,6 +43,7 @@ def parse_config():
         if 'custom_libs' in confs['env']:
             custom_libs.append(confs['env']['custom_libs'])
         confs['env']['custom_libs'] = ','.join(custom_libs)
+    confs['env']['local_rank'] = args.local_rank
     return confs
 
 def stringizing(conf: dict):
