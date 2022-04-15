@@ -347,7 +347,7 @@ class Trainer(AbstractTrainer):
         else:
             scaled_loss = possible_scale_loss(loss)
             scaled_loss.backward()
-            if self._env.distributed_world > 1 and self._env.fp16:
+            if self._env.distributed_world > 1 and self._env.fp16 and self._env.distributed in ['horovod', 'hvd']:
                 self._optimizer.optimizer.synchronize()
 
     @contextmanager

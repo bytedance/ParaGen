@@ -57,7 +57,7 @@ class Optimizer:
 
     @contextmanager
     def _possible_skip_synchronize(self):
-        if self._env.distributed_world > 1:
+        if self._env.distributed_world > 1 and self._env.distributed in ['horovod', 'hvd']:
             with self._optimizer.skip_synchronize():
                 yield
         else:
