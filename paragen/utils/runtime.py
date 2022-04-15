@@ -57,6 +57,7 @@ class Environment:
                  no_progress_bar: bool = False,
                  pb_interval: int = 1,
                  distributed: str = 'ddp',
+                 backend: str = 'nccl',
                  custom_libs: str = None,
                  local_rank: int = 0,
                  log_filename: str = None):
@@ -69,6 +70,7 @@ class Environment:
         self.no_progress_bar = no_progress_bar
         self.pb_interval = pb_interval
         self.distributed = distributed
+        self.backend = backend
         self.log_filename = log_filename
 
         self.distributed_world = 1
@@ -124,7 +126,7 @@ class Environment:
                 self.distributed_world = hvd.size()
             elif self.distributed == 'ddp':
                 import torch.distributed as dist
-                dist.init_process_group(backend='nccl')
+                dist.init_process_group(backend=self.backend)
                 self.rank = dist.get_rank()
                 self.distributed_world = dist.get_world_size()
             else:
