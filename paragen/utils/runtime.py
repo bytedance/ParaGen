@@ -90,11 +90,8 @@ class Environment:
 
     def _init_log(self):
         FORMAT = f'%(asctime)s ｜ %(levelname)s | %(name)s |{f" RANK {self.rank} | " if not self.is_master() else " "}%(message)s'
-        logging.basicConfig(filename=self.log_filename, format=FORMAT, datefmt='%Y-%m-%d,%H:%M:%S', level=logging.INFO)
-        if not self.is_master():
-            logging.disable(logging.INFO)
-        if not self.debug:
-            logging.disable(logging.DEBUG)
+        level = logging.INFO if self.is_master() else logging.WARN
+        logging.basicConfig(filename=self.log_filename, format=FORMAT, datefmt='%Y-%m-%d,%H:%M:%S', level=level)
 
     def _import_custom_lib(self, path):
         """
