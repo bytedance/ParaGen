@@ -58,6 +58,7 @@ class Environment:
                  pb_interval: int = 1,
                  distributed: str = 'ddp',
                  custom_libs: str = None,
+                 local_rank: int = 0,
                  log_filename: str = None):
         self.profiling_window = profiling_window
         self.configs = configs
@@ -72,6 +73,7 @@ class Environment:
 
         self.distributed_world = 1
         self.rank = 0
+        self.local_rank = local_rank
         if device is None:
             if torch.cuda.is_available():
                 self.device = 'cuda'
@@ -127,7 +129,6 @@ class Environment:
                 import torch.distributed as dist
                 dist.init_process_group(backend='nccl')
                 self.rank = dist.get_rank()
-                self.local_rank = dist.local_rank()
                 self.distributed_world = dist.get_world_size()
             else:
                 raise NotImplementedError
