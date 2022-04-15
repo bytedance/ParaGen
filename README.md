@@ -20,10 +20,18 @@ conda install -c conda-forge mpi4py
 cd ParaGen
 pip install -e .
 ``` 
-* For distributed training on multiple GPUs, you need to make sure `horovod` has been installed.
+* For distributed training on multiple GPUs, run `ParaGen` with `torch.distributed`
+```bash
+python -m torch.distributed.launch --nproc_per_node {GPU_NUM} paragen/entries/run.py --configs {config_file}
+```
+You can also use `horovod` for distributed training. Install `horovod` with
 ``` bash
 # require CMake to install horovod. (https://cmake.org/install/)
 HOROVOD_WITH_PYTORCH=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_NCCL_HOME=${NCCL_ROOT_DIR} pip install horovod
+```
+Then run `ParaGen` with `horovod`:
+```bash
+horovodrun -np {GPU_NUM} -H localhost:{GPU_NUM} paragen-run --configs {config_file}
 ```
 * Install lightseq to faster train:
 ``` bash
