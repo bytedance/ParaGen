@@ -126,7 +126,6 @@ class Environment:
             elif self.distributed == 'ddp':
                 import torch.distributed as dist
                 dist.init_process_group(backend=self.backend)
-                torch.cuda.set_device(hvd.local_rank())
                 self.rank = dist.get_rank()
                 self.distributed_world = dist.get_world_size()
             else:
