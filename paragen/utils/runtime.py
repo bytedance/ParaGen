@@ -56,6 +56,7 @@ class Environment:
                  fp16: bool = False,
                  no_progress_bar: bool = False,
                  pb_interval: int = 1,
+                 distributed: str = 'ddp',
                  custom_libs: str = None,
                  log_filename: str = None):
         self.profiling_window = profiling_window
@@ -66,11 +67,11 @@ class Environment:
         self.fp16 = fp16
         self.no_progress_bar = no_progress_bar
         self.pb_interval = pb_interval
+        self.distributed = distributed
         self.log_filename = log_filename
 
         self.distributed_world = 1
         self.rank = 0
-        self.local_rank = 0
         if device is None:
             if torch.cuda.is_available():
                 self.device = 'cuda'
@@ -115,12 +116,21 @@ class Environment:
         used on each worker.
         """
         if torch.cuda.device_count() > 1:
-            import horovod.torch as hvd
-            hvd.init()
-            torch.cuda.set_device(hvd.local_rank())
-            self.rank = hvd.rank()
-            self.local_rank = hvd.local_rank()
-            self.distributed_world = hvd.size()
+            if self.distributed in ['horovod', 'hvd']:
+                import horovod.torch as hvd
+                hvd.init()
+                torch.cuda.set_device(hvd.local_rank())
+                self.rank = hvd.rank()
+                self.local_rank = hvd.local_rank()
+                self.distributed_world = hvd.size()
+            elif self.distributed == 'ddp':
+                import torch.distributed as dist
+                dist.init_process_group(backend='nccl')
+                self.rank = dist.get_rank()
+                self.local_rank = dist.local_rank()
+                self.distributed_world = dist.get_world_size()
+            else:
+                raise NotImplementedError
         torch.cuda.empty_cache()
 
     def _init_seed(self):
@@ -139,6 +149,13 @@ class Environment:
         check the current process is the master process
         """
         return self.rank == 0
+
+    def join(self):
+        if self.distributed in ['horovod', 'hvd']:
+            import horovod as hvd
+            hvd.join()
+        else:
+            pass
 
 
 def build_env(*args, **kwargs):

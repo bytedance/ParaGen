@@ -63,21 +63,29 @@ def build_optimizer(model, configs, enable_apex=False):
     else:
         grouped_parameters = model.parameters()
 
-    optimizer = cls(grouped_parameters, lr=lr_scheduler.rate, **configs)
-
     env = Environment()
     if env.distributed_world > 1:
-        import horovod.torch as hvd
-        hvd_kwargs = {}
-        if 'update_frequency' in optimizer_kwargs:
-            hvd_kwargs['backward_passes_per_step'] = optimizer_kwargs['update_frequency']
-        if env.fp16 and not enable_apex:
-            hvd_kwargs['compression'] = hvd.Compression.fp16
-        optimizer = hvd.DistributedOptimizer(optimizer,
-                                             named_parameters=model.named_parameters(),
-                                             **hvd_kwargs)
-        hvd.broadcast_parameters(model.state_dict(), root_rank=0)
-        hvd.broadcast_optimizer_state(optimizer, root_rank=0)
+        if env.distributed in ['horovod', 'hvd']:
+            optimizer = cls(grouped_parameters, lr=lr_scheduler.rate, **configs)
+            import horovod.torch as hvd
+            hvd_kwargs = {}
+            if 'update_frequency' in optimizer_kwargs:
+                hvd_kwargs['backward_passes_per_step'] = optimizer_kwargs['update_frequency']
+            if env.fp16 and not enable_apex:
+                hvd_kwargs['compression'] = hvd.Compression.fp16
+            optimizer = hvd.DistributedOptimizer(optimizer,
+                                                 named_parameters=model.named_parameters(),
+                                                 **hvd_kwargs)
+            hvd.broadcast_parameters(model.state_dict(), root_rank=0)
+            hvd.broadcast_optimizer_state(optimizer, root_rank=0)
+        elif env.distributed == 'ddp':
+            from torch.nn.parallel import DistributedDataParallel as DDP
+            model = DDP(model, device_ids=[env.local_rank], output_device=env.local_rank)
+            optimizer = cls(grouped_parameters, lr=lr_scheduler.rate, **configs)
+        else:
+            raise NotImplementedError
+    else:
+        optimizer = cls(grouped_parameters, lr=lr_scheduler.rate, **configs)
 
     if enable_apex:
         from apex import amp

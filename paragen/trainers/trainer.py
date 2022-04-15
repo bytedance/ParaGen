@@ -6,10 +6,6 @@ logger = logging.getLogger(__name__)
 
 from torch.utils.tensorboard import SummaryWriter
 import torch
-try:
-    import horovod.torch as hvd
-except:
-    pass
 
 from paragen.optim import build_optimizer
 from paragen.trainers import AbstractTrainer, register_trainer
@@ -159,7 +155,7 @@ class Trainer(AbstractTrainer):
     def _possible_restore_checkpoint(self):
         if self._save_model_dir is not None:
             if self._env.distributed_world > 1:
-                hvd.join()
+                self._env.join()
             if exists(self._save_model_dir):
                 if self._force_restart:
                     remove_tree(self._save_model_dir)
@@ -167,7 +163,7 @@ class Trainer(AbstractTrainer):
             else:
                 mkdir(self._save_model_dir)
             if self._env.distributed_world > 1:
-                hvd.join()
+                self._env.join()
             if self._restore_path is None and exists(f'{self._save_model_dir}/last.pt'):
                 self._restore_path = f'{self._save_model_dir}/last.pt'
 
@@ -188,7 +184,7 @@ class Trainer(AbstractTrainer):
             self._eval()
 
         if self._env.distributed_world > 1:
-            hvd.join()
+            self._env.join()
 
     def train(self):
         """
@@ -241,7 +237,7 @@ class Trainer(AbstractTrainer):
                 if self._save_model_dir:
                     self._save_last_model()
             if self._env.distributed_world > 1:
-                hvd.join()
+                self._env.join()
 
         # check if doing evaluation
         if self._validate_interval_epoch and \
@@ -255,7 +251,7 @@ class Trainer(AbstractTrainer):
                 if self._tensorboard_dir:
                     self._update_tensorboard('eval', eval_states)
             if self._env.distributed_world > 1:
-                hvd.join()
+                self._env.join()
 
     def _safe_step(self, samples):
         """
@@ -396,7 +392,7 @@ class Trainer(AbstractTrainer):
                 if self._save_model_dir:
                     self._save_last_model()
             if self._env.distributed_world > 1:
-                hvd.join()
+                self._env.join()
 
         # check if doing evaluation
         if self._validate_interval_step and \
@@ -410,7 +406,7 @@ class Trainer(AbstractTrainer):
                 if self._tensorboard_dir:
                     self._update_tensorboard('eval', eval_states)
             if self._env.distributed_world > 1:
-                hvd.join()
+                self._env.join()
 
     def _update_logging(self):
         """
