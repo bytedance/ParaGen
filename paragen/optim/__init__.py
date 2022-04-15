@@ -50,23 +50,25 @@ def build_optimizer(model, configs, enable_apex=False):
         mod = importlib.import_module('torch.optim')
         cls = getattr(mod, name)
 
-    if 'no_decay' in configs:
-        named_parameters = model.named_parameters()
-        no_decay = configs.pop('no_decay')
-        weight_decay = configs.pop('weight_decay')
-        grouped_parameters = [
-            {'params': [p for n, p in named_parameters if not any(nd in n for nd in no_decay)],
-             'weight_decay': weight_decay},
-            {'params': [p for n, p in named_parameters if any(nd in n for nd in no_decay)],
-             'weight_decay': 0.0}
-        ]
-    else:
-        grouped_parameters = model.parameters()
+    def get_grouped_parameters(model):
+        if 'no_decay' in configs:
+            named_parameters = model.named_parameters()
+            no_decay = configs.pop('no_decay')
+            weight_decay = configs.pop('weight_decay')
+            grouped_parameters = [
+                {'params': [p for n, p in named_parameters if not any(nd in n for nd in no_decay)],
+                 'weight_decay': weight_decay},
+                {'params': [p for n, p in named_parameters if any(nd in n for nd in no_decay)],
+                 'weight_decay': 0.0}
+            ]
+        else:
+            grouped_parameters = model.parameters()
+        return grouped_parameters
 
     env = Environment()
     if env.distributed_world > 1:
         if env.distributed in ['horovod', 'hvd']:
-            optimizer = cls(grouped_parameters, lr=lr_scheduler.rate, **configs)
+            optimizer = cls(get_grouped_parameters(model), lr=lr_scheduler.rate, **configs)
             import horovod.torch as hvd
             hvd_kwargs = {}
             if 'update_frequency' in optimizer_kwargs:
@@ -80,12 +82,14 @@ def build_optimizer(model, configs, enable_apex=False):
             hvd.broadcast_optimizer_state(optimizer, root_rank=0)
         elif env.distributed == 'ddp':
             from torch.nn.parallel import DistributedDataParallel as DDP
-            model = DDP(model, device_ids=[env.local_rank], output_device=env.local_rank)
+            grouped_parameters = get_grouped_parameters(
+                DDP(model, device_ids=[env.local_rank], output_device=env.local_rank)
+            )
             optimizer = cls(grouped_parameters, lr=lr_scheduler.rate, **configs)
         else:
             raise NotImplementedError
     else:
-        optimizer = cls(grouped_parameters, lr=lr_scheduler.rate, **configs)
+        optimizer = cls(get_grouped_parameters(model), lr=lr_scheduler.rate, **configs)
 
     if enable_apex:
         from apex import amp
