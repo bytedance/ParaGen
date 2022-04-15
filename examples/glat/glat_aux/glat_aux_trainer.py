@@ -1,8 +1,5 @@
 import torch
-try:
-    import horovod.torch as hvd
-except:
-    pass
+
 from paragen.trainers.trainer import Trainer
 from paragen.trainers import register_trainer
 
