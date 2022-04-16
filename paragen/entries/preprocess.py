@@ -19,9 +19,9 @@ def main():
         dataset = create_dataset(dataset_conf)
         assert isinstance(dataset, AbstractDataset)
         if name == 'train':
-            dataset.build(collate_fn=lambda x: self._data_collate_fn(x, is_training=True), preprocessed=False)
+            dataset.build(collate_fn=lambda x: task._data_collate_fn(x, is_training=True), preprocessed=False)
         else:
-            dataset.build(collate_fn=lambda x: self._data_collate_fn(x, is_training=False), preprocessed=False)
+            dataset.build(collate_fn=lambda x: task._data_collate_fn(x, is_training=False), preprocessed=False)
         dataset.write(path=output_path, data_map_path=data_map_path)
 
 
