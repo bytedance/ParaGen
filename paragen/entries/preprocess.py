@@ -12,13 +12,16 @@ def main():
     assert isinstance(task, AbstractTask)
     task.build()
     dataset_conf = confs['dataset']
-    for _, conf in confs['data'].items():
+    for name, conf in confs['data'].items():
         output_path = conf['output_path']
         data_map_path = conf['data_map_path'] if 'data_map_path' in conf else None
         dataset_conf['path'] = conf['path']
         dataset = create_dataset(dataset_conf)
         assert isinstance(dataset, AbstractDataset)
-        dataset.build(collate_fn=task._data_collate_fn, preprocessed=False)
+        if name == 'train':
+            dataset.build(collate_fn=lambda x: self._data_collate_fn(x, is_training=True), preprocessed=False)
+        else:
+            dataset.build(collate_fn=lambda x: self._data_collate_fn(x, is_training=False), preprocessed=False)
         dataset.write(path=output_path, data_map_path=data_map_path)
 
 
