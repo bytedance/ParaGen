@@ -80,10 +80,8 @@ task:
   generator:
     class: SequenceGenerator
     search:
-      class: BeamSearch
-      maxlen_coef: (1, 50)
-      beam: 4
-      lenpen: 0.6
+      class: GreedySearch
+      maxlen_coef: (0, 400)
   evaluator:
     class: Evaluator
     metric:
