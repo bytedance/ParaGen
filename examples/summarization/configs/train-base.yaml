@@ -1,0 +1,96 @@
+task:
+  class: Seq2SeqTask
+  mode: train
+  src: src
+  tgt: tgt
+  maxlen: (1024,400)
+  preprocessed: True
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/bart-base
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 64
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 64
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 64
+  data:
+    train:
+      class: JsonDataset
+      path: data/train.index.json
+    valid:
+      class: JsonDataset
+      sort_samples: True
+      path: data/val.index.json
+    test:
+      class: JsonDataset
+      sort_samples: True
+      path: data/test.index.json
+  model:
+    class: Seq2Seq
+    encoder:
+      class: TransformerEncoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'relu'
+    decoder:
+      class: TransformerDecoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'relu'
+    share_embedding: decoder-input-output
+    d_model: 512
+  criterion:
+    class: LabelSmoothedCrossEntropy
+    epsilon: 0.1
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: InverseSquareRootRateScheduler
+        rate: 1e-3
+        warmup_steps: 4000
+      clip_norm: 0.
+      betas: (0.9, 0.98)
+      eps: 1e-8
+      weight_decay: 1e-2
+    max_epochs: 100
+    max_steps: 1000000
+    validate_interval_step: 4000
+    assess_by: valid.criterion
+    assess_reverse: True
+    save_model_dir: checkpoints
+  generator:
+    class: SequenceGenerator
+    search:
+      class: BeamSearch
+      maxlen_coef: (1, 50)
+      beam: 4
+      lenpen: 0.6
+  evaluator:
+    class: Evaluator
+    metric:
+      bleu:
+        class: BLEU
+env:
+  device: cuda
+  fp16: True
+  no_warning: True
+  no_progress_bar: True
