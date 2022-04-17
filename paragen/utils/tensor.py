@@ -153,7 +153,7 @@ def convert_tensor_to_idx(tensor: Tensor, bos: int = None, eos: int = None, pad:
         - a nd list of indices
     """
     idx = tensor.tolist()
-    if bos and eos and pad:
+    if bos is not None and eos is not None and pad is not None:
         idx = remove_special_tokens(idx, bos, eos, pad)
     return idx
 
