@@ -163,9 +163,9 @@ class Seq2SeqTask(BaseTask):
         Returns:
             idx (list): debatched idx
         """
-        idx = convert_tensor_to_idx(sample,
-                                    bos=self._tokenizer.bos,
-                                    eos=self._tokenizer.eos,
-                                    pad=self._tokenizer.pad)
-        sample = [s in self._tokenizer.decode(s)]
+        sample = convert_tensor_to_idx(sample,
+                                       bos=self._tokenizer.bos,
+                                       eos=self._tokenizer.eos,
+                                       pad=self._tokenizer.pad)
+        sample = [self._tokenizer.decode(s) for s in sample]
         return sample
