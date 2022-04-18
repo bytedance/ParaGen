@@ -39,7 +39,7 @@ task:
       activation: 'relu'
     share_embedding: decoder-input-output
     d_model: 512
-    checkpoints: checkpoints/best.pt
+    path: checkpoints/best.pt
   generator:
     class: SequenceGenerator
     search:
