@@ -9,7 +9,7 @@ from paragen.metrics import create_metric
 from paragen.utils.ops import auto_map_args
 from paragen.utils.runtime import progress_bar, Environment
 from paragen.utils.io import UniIO, exists, mkdir, remove_tree
-from paragen.utils.tensor import to_device, possible_autocast
+from paragen.utils.tensor import to_device, possible_autocast, split_samples
 
 
 @register_evaluator
@@ -155,22 +155,30 @@ class Evaluator(AbstractEvaluator):
         """
         input_list, hypo_list, ref_list = [], [], []
         for samples in progress_bar(dataloader):
-            self._step_reset()
-            with torch.no_grad():
-                self._generator.reset(mode='infer')
-                samples = to_device(samples, self._env.device)
-                if isinstance(samples['net_input'], Dict):
-                    samples['net_input'] = auto_map_args(samples['net_input'], self._generator.input_slots)
-                with possible_autocast():
-                    hypos = self._generator(*samples['net_input'])
+            samples = [samples]
+            while len(samples) > 0:
+                s = samples.pop(0)
+                try:
+                    hypos = self._step(s)
+                    hypos = self._postprocess(hypos, s)
+                    input_list, hypo_list, ref_list = self._step_update(input_list,
+                                                                        hypo_list,
+                                                                        ref_list,
+                                                                        s['text_input'] if 'text_input' in s else [None for _ in hypos],
+                                                                        hypos,
+                                                                        s['text_output'] if 'text_output' in s else [None for _ in hypos])
+                except RuntimeError as e:
+                    error_info = str(e)
+                    error_info = error_info.split('\n')[0]
+                    logger.warning(error_info)
+                    oom = 'out of memory' in error_info
+                    if not oom:
+                        raise e
+                    if oom and self._env.device == 'cuda':
+                        torch.cuda.empty_cache()
+                        s1, s2 = split_samples(s)
+                        samples.extend([s1, s2])
 
-            hypos = self._postprocess(hypos, samples)
-            input_list, hypo_list, ref_list = self._step_update(input_list,
-                                                                hypo_list,
-                                                                ref_list,
-                                                                samples['text_input'] if 'text_input' in samples else [None for _ in hypos],
-                                                                hypos,
-                                                                samples['text_output'] if 'text_output' in samples else [None for _ in hypos])
         info = ''
         for idx in self._random_indices:
             idx = idx % len(hypo_list)
@@ -189,4 +197,14 @@ class Evaluator(AbstractEvaluator):
             for metric in self._metric.values():
                 metric.add_all(hypo_list, ref_list)
 
+    def _step(self, samples):
+        self._step_reset()
+        with torch.no_grad():
+            self._generator.reset(mode='infer')
+            samples = to_device(samples, self._env.device)
+            if isinstance(samples['net_input'], Dict):
+                samples['net_input'] = auto_map_args(samples['net_input'], self._generator.input_slots)
+            with possible_autocast():
+                hypos = self._generator(*samples['net_input'])
+        return hypos
 

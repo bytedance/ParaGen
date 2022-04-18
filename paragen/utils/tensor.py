@@ -254,6 +254,30 @@ def half_samples(samples):
         raise NotImplementedError
 
 
+def split_samples(samples):
+    """
+    Half tensor of the given samples
+
+    Args:
+        samples: samples to half
+
+    Returns:
+        - two halved samples
+    """
+    if isinstance(samples, List):
+        samples = [split_samples(s) for s in samples]
+        samples = list(zip(*samples))
+        return samples[0], samples[1]
+    elif isinstance(samples, Dict):
+        samples = {k: split_samples(v) for k, v in samples.items()}
+        return {k: v[0] for k, v in samples.items()}, {k: v[1] for k, v in samples.items()}
+    elif isinstance(samples, Tensor):
+        idx = samples.shape[0] // 2 + 1
+        return samples[:idx], samples[idx:]
+    else:
+        raise NotImplementedError
+
+
 def index_tensor(tensor, idx):
     """
     select tensor with the row of given indices
