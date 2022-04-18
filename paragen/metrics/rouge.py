@@ -1,4 +1,4 @@
-from rouge import Rouge
+from rouge import Rouge as Rg
 
 from paragen.metrics import PairwiseMetric, register_metric
 
@@ -15,7 +15,7 @@ class Rouge(PairwiseMetric):
     def __init__(self, ngram='1'):
         super().__init__()
         self._ngram = ngram
-        self._rouge = Rouge()
+        self._rouge = Rg()
 
     def eval(self):
         """
