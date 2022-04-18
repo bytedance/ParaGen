@@ -272,7 +272,7 @@ def split_samples(samples):
         samples = {k: split_samples(v) for k, v in samples.items()}
         return {k: v[0] for k, v in samples.items()}, {k: v[1] for k, v in samples.items()}
     elif isinstance(samples, Tensor):
-        idx = samples.shape[0] // 2 + 1
+        idx = samples.shape[0] // 2
         return samples[:idx], samples[idx:]
     else:
         raise NotImplementedError
