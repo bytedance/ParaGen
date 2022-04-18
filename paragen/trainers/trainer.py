@@ -237,8 +237,6 @@ class Trainer(AbstractTrainer):
             if self._env.distributed_world > 1:
                 self._env.join()
 
-        self._epoch_cnt += 1
-
         # check if doing evaluation
         if self._validate_interval_epoch and \
                 self._epoch_cnt >= self._start_validate_epoch and \
@@ -252,6 +250,8 @@ class Trainer(AbstractTrainer):
                     self._update_tensorboard('eval', eval_states)
             if self._env.distributed_world > 1:
                 self._env.join()
+
+        self._epoch_cnt += 1
 
     def _safe_step(self, samples):
         """
