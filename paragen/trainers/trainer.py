@@ -230,14 +230,14 @@ class Trainer(AbstractTrainer):
 
         yield
 
-        self._epoch_cnt += 1
-
         if self._save_epochs and self._epoch_cnt % self._save_epochs == 0:
             if self._env.is_master():
                 if self._save_model_dir:
                     self._save_last_model()
             if self._env.distributed_world > 1:
                 self._env.join()
+
+        self._epoch_cnt += 1
 
         # check if doing evaluation
         if self._validate_interval_epoch and \
