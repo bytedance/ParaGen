@@ -27,15 +27,15 @@ task:
   data:
     train:
       class: JsonDataset
-      path: examples/summarization/data/train.index.json
+      path: data/train.index.json
     valid:
       class: JsonDataset
       sort_samples: True
-      path: examples/summarization/data/val.index.json
+      path: data/val.index.json
     test:
       class: JsonDataset
       sort_samples: True
-      path: examples/summarization/data/test.index.json
+      path: data/test.index.json
   model:
     class: HuggingfaceBartModel
     pretrained_model: facebook/bart-base
