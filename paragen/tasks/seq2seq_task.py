@@ -127,9 +127,8 @@ class Seq2SeqTask(BaseTask):
             tgt, prev_tokens = split_tgt_sequence(samples[self._tgt],
                                                   bos=self._tokenizer.bos,
                                                   eos=self._tokenizer.eos)
-            if self._training:
-                prev_tokens = [v[:self._maxlen_tgt] for v in prev_tokens]
-                tgt = [v[:self._maxlen_tgt] for v in tgt]
+            prev_tokens = [v[:self._maxlen_tgt] for v in prev_tokens]
+            tgt = [v[:self._maxlen_tgt] for v in tgt]
             tgt = convert_idx_to_tensor(tgt, pad=self._tokenizer.pad)
             prev_tokens = convert_idx_to_tensor(prev_tokens, pad=self._tokenizer.pad)
             batch = {
