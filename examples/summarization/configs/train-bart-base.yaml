@@ -46,19 +46,14 @@ task:
     class: Trainer
     optimizer:
       class: Adafactor
-      lr:
-        class: PolynomialDecayScheduler
-        max_rate: 5e-5
-        warmup_steps: 500
-        total_steps: 15000
-      clip_norm: 1.
-      betas: (0.9, 0.98)
-      eps: 1e-8
-      weight_decay: 1e-2
+      lr: 1e-3
+      relative_step: False
+      scale_parameter: False
+      warmup_init: False
     max_epochs: 30
     max_steps: 1000000
     validate_interval_epoch: 1
-    assess_by: valid.criterion
+    assess_by: valid.rouge-1
     assess_reverse: True
     save_model_dir: checkpoints
   generator:

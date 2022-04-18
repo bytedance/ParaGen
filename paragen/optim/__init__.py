@@ -52,7 +52,7 @@ def build_optimizer(model, configs, enable_apex=False):
             try:
                 mod = importlib.import_module(module)
                 cls = getattr(mod, name)
-            except ImportError as e:
+            except AttributeError as e:
                 pass
             if cls is not None:
                 break
