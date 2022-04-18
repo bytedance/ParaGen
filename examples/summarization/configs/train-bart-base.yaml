@@ -1,5 +1,5 @@
 task:
-  class: Seq2SeqTask
+  class: HugginfaceSeq2SeqTask
   mode: train
   src: src
   tgt: tgt
@@ -45,13 +45,13 @@ task:
   trainer:
     class: Trainer
     optimizer:
-      class: AdamW
+      class: Adafactor
       lr:
         class: PolynomialDecayScheduler
         max_rate: 5e-5
         warmup_steps: 500
         total_steps: 15000
-      clip_norm: 0.
+      clip_norm: 1.
       betas: (0.9, 0.98)
       eps: 1e-8
       weight_decay: 1e-2

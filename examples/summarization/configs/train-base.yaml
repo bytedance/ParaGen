@@ -54,7 +54,7 @@ task:
       dim_feedforward: 2048
       dropout: 0.1
       activation: 'relu'
-    share_embedding: decoder-input-output
+    share_embedding: all
     d_model: 512
   criterion:
     class: LabelSmoothedCrossEntropy
