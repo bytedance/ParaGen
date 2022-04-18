@@ -57,8 +57,8 @@ class Trainer(AbstractTrainer):
                  save_steps=None,
                  save_epochs=None,
                  log_interval=500,
-                 start_validate_epoch=0,
-                 start_validate_step=0,
+                 start_validate_epoch=1,
+                 start_validate_step=1,
                  assess_by='criterion',
                  assess_reverse=False,
                  tensorboard_dir=None,
@@ -191,6 +191,7 @@ class Trainer(AbstractTrainer):
         Training process
         """
         self.set_mode('train')
+        self._tot_step_cnt += 1
         self._epoch_cnt += 1
         while True:
             with self._epoch_context():
@@ -368,14 +369,6 @@ class Trainer(AbstractTrainer):
             self._token_count += real_ntokens
             self._current_logging_states['ntokens'] = real_ntokens
 
-        self._step_cnt += 1
-        self._tot_step_cnt += 1
-
-        self._dataloader.step_update(self._tot_step_cnt)
-        self._criterion.step_update(self._tot_step_cnt)
-        # lazy update for saving computation
-        self._optimizer.step_update(self._tot_step_cnt)
-
         # update logging on tqdm
         self._update_logging()
         if self._env.is_master() and self._tensorboard_dir:
@@ -407,6 +400,14 @@ class Trainer(AbstractTrainer):
                     self._update_tensorboard('eval', eval_states)
             if self._env.distributed_world > 1:
                 self._env.join()
+
+        self._step_cnt += 1
+        self._tot_step_cnt += 1
+
+        self._dataloader.step_update(self._tot_step_cnt)
+        self._criterion.step_update(self._tot_step_cnt)
+        # lazy update for saving computation
+        self._optimizer.step_update(self._tot_step_cnt)
 
     def _update_logging(self):
         """
