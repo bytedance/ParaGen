@@ -543,7 +543,8 @@ class Trainer(AbstractTrainer):
         assert self._env.is_master(), "only master process is allowed to save models"
         name_step = f'updates-{self._tot_step_cnt}.epochs-{self._epoch_cnt}'
         name_metric = '.'.join(
-            [('{}-{:.4f}' if isinstance(v, float) else '{}-{}').format(k, v) for k, v in kwargs.items()])
+            [('{}-{:.4f}' if isinstance(v, float) else '{}-{}').format(k, v)
+             for k, v in kwargs.items() if self._assess_by in k])
         name = f'{name_step}.{name_metric}'
 
         state_dict = self.state_dict()
