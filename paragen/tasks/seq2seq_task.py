@@ -1,8 +1,6 @@
 from typing import Dict, List
 import json
 
-from torch import Tensor
-
 from paragen.criteria import create_criterion
 from paragen.generators import create_generator
 from paragen.models import create_model
