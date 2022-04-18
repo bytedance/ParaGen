@@ -47,8 +47,15 @@ def build_optimizer(model, configs, enable_apex=False):
         cls = registry[name.lower()]
     else:
         import importlib
-        mod = importlib.import_module('torch.optim')
-        cls = getattr(mod, name)
+        cls = None
+        for module in ['torch.optim', 'transformers']:
+            try:
+                mod = importlib.import_module(module)
+                cls = getattr(mod, name)
+            except ImportError as e:
+                pass
+            if cls is not None:
+                break
 
     def get_grouped_parameters(model):
         if 'no_decay' in configs:
