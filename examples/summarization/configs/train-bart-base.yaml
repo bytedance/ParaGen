@@ -13,7 +13,7 @@ task:
       class: InMemoryDataLoader
       sampler:
         class: ShuffleSampler
-        max_samples: 64
+        max_samples: 32
     valid:
       class: InMemoryDataLoader
       sampler:
@@ -55,9 +55,9 @@ task:
       betas: (0.9, 0.98)
       eps: 1e-8
       weight_decay: 1e-2
-    max_epochs: 100
+    max_epochs: 30
     max_steps: 1000000
-    validate_interval_step: 4000
+    validate_interval_epoch: 1
     assess_by: valid.criterion
     assess_reverse: True
     save_model_dir: checkpoints
