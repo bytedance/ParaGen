@@ -57,7 +57,6 @@ task:
     max_steps: 50000
     validate_interval_epoch: 1
     assess_by: valid.rouge-1
-    assess_reverse: True
     save_model_dir: checkpoints
   generator:
     class: SelfContainedGenerator

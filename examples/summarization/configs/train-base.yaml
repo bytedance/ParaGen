@@ -62,20 +62,18 @@ task:
   trainer:
     class: Trainer
     optimizer:
-      class: AdamW
+      class: Adafactor
       lr:
-        class: InverseSquareRootRateScheduler
-        rate: 5e-4
-        warmup_steps: 8000
-      clip_norm: 0.
-      betas: (0.9, 0.98)
-      eps: 1e-8
-      weight_decay: 1e-2
-    max_epochs: 100
-    max_steps: 1000000
-    validate_interval_step: 4000
-    assess_by: valid.criterion
-    assess_reverse: True
+        class: PolynomialDecayScheduler
+        max_rate: 1e-5
+        warmup_steps: 500
+        total_steps: 50000
+      relative_step: False
+      scale_parameter: False
+      warmup_init: False
+    max_steps: 50000
+    validate_interval_epoch: 1
+    assess_by: valid.rouge-1
     save_model_dir: checkpoints
   generator:
     class: SequenceGenerator
