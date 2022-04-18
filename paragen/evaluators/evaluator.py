@@ -20,6 +20,7 @@ class Evaluator(AbstractEvaluator):
     Args:
         metric (dict): metric configuration for building evaluator
         display_samples (int): the number of samples with hypothesis and references to display
+        no_display_option (str): option ['input', 'output'], default None. Do not display input or output of a sample
         save_hypo_dir (str): directory path to store hypothesis. All the hypothesis of each dataloader will be saved
             under `save_hypo_dir`
     """
@@ -27,12 +28,14 @@ class Evaluator(AbstractEvaluator):
     def __init__(self,
                  metric: Dict = None,
                  display_samples: int = 5,
+                 no_display_option: str = None,
                  save_hypo_dir: str = None,
                  ):
         super().__init__()
         self._display_samples = display_samples
         self._save_hypo_dir = save_hypo_dir
         self._metric_configs = metric
+        self._no_display_option = no_display_option.split(',') if display_option is not None else None
 
         self._generator, self._dataloaders, self._tokenizer, self._task_callback = None, None, None, None
         self._metric, self._postprocess = None, None
@@ -174,10 +177,10 @@ class Evaluator(AbstractEvaluator):
         for idx in self._random_indices:
             idx = idx % len(hypo_list)
             info += '\n'
-            if input_list[idx] is not None:
+            if 'input' not in self._no_display_option and input_list[idx] is not None:
                 info += f'\tInput: {input_list[idx]}\n'
             info += f'\tHypothesis: {hypo_list[idx]}\n'
-            if ref_list[idx] is not None:
+            if 'output' not in self._no_display_option and ref_list[idx] is not None:
                 info += f'\tGround Truth: {ref_list[idx]}\n'
         logger.info(info)
         if self._env.is_master() and out_path:
