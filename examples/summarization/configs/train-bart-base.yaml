@@ -46,12 +46,15 @@ task:
     class: Trainer
     optimizer:
       class: Adafactor
-      lr: 1e-3
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 5e-5
+        warmup_steps: 2000
+        total_steps: 50000
       relative_step: False
       scale_parameter: False
       warmup_init: False
-    max_epochs: 30
-    max_steps: 1000000
+    max_steps: 50000
     validate_interval_epoch: 1
     assess_by: valid.rouge-1
     assess_reverse: True
