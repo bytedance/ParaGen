@@ -20,7 +20,7 @@ class Evaluator(AbstractEvaluator):
     Args:
         metric (dict): metric configuration for building evaluator
         display_samples (int): the number of samples with hypothesis and references to display
-        no_display_option (str): option ['input', 'output'], default None. Do not display input or output of a sample
+        no_display_option (str): option ['source', 'reference'], default None. Do not display source or reference of a sample
         save_hypo_dir (str): directory path to store hypothesis. All the hypothesis of each dataloader will be saved
             under `save_hypo_dir`
     """
@@ -35,7 +35,7 @@ class Evaluator(AbstractEvaluator):
         self._display_samples = display_samples
         self._save_hypo_dir = save_hypo_dir
         self._metric_configs = metric
-        self._no_display_option = no_display_option.split(',') if no_display_option is not None else None
+        self._no_display_option = no_display_option.lower().split(',') if no_display_option is not None else None
 
         self._generator, self._dataloaders, self._tokenizer, self._task_callback = None, None, None, None
         self._metric, self._postprocess = None, None
@@ -123,13 +123,11 @@ class Evaluator(AbstractEvaluator):
             logger.info(f'eval on {data_name} dataset')
             self._eval_reset()
             self.eval_one_dataset(dataloader,
-                                  out_path='{}/{}.hypo'.format(self._save_hypo_dir,
-                                                               data_name) if self._save_hypo_dir else None)
+                                  out_path=f'{self._save_hypo_dir}/{data_name}.hypo' if self._save_hypo_dir else None)
             self._eval_update()
             for metric_name, metric in self._metric.items():
                 states[f'{data_name}.{metric_name}'] = metric.eval()
-            logger.info(' | '.join(['{}: {}'.format(name, metric.eval())
-                                    for name, metric in self._metric.items()]))
+            logger.info(' | '.join([f'{name}: {metric.eval()}' for name, metric in self._metric.items()]))
         for metric_name in self._metric.keys():
             if len(self._dataloaders) > 0:
                 tot, cnt = 0, 0
@@ -177,11 +175,11 @@ class Evaluator(AbstractEvaluator):
         for idx in self._random_indices:
             idx = idx % len(hypo_list)
             info += '\n'
-            if 'input' not in self._no_display_option and input_list[idx] is not None:
-                info += f'\tInput: {input_list[idx]}\n'
+            if 'source' not in self._no_display_option and input_list[idx] is not None:
+                info += f'\tSource: {input_list[idx]}\n'
             info += f'\tHypothesis: {hypo_list[idx]}\n'
-            if 'output' not in self._no_display_option and ref_list[idx] is not None:
-                info += f'\tGround Truth: {ref_list[idx]}\n'
+            if 'reference' not in self._no_display_option and ref_list[idx] is not None:
+                info += f'\tReference: {ref_list[idx]}\n'
         logger.info(info)
         if self._env.is_master() and out_path:
             with UniIO(out_path, 'w') as fout:
