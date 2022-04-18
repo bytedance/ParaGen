@@ -1,6 +1,6 @@
 task:
   class: Seq2SeqTask
-  mode: train
+  mode: evaluate
   src: src
   tgt: tgt
   maxlen: (1024,400)
@@ -9,29 +9,12 @@ task:
     class: HuggingfaceTokenizer
     tokenizer_name: facebook/bart-base
   dataloader:
-    train:
-      class: InMemoryDataLoader
-      sampler:
-        class: ShuffleSampler
-        max_samples: 64
-    valid:
-      class: InMemoryDataLoader
-      sampler:
-        class: SequentialSampler
-        max_samples: 64
     test:
       class: InMemoryDataLoader
       sampler:
         class: SequentialSampler
         max_samples: 64
   data:
-    train:
-      class: JsonDataset
-      path: data/train.index.json
-    valid:
-      class: JsonDataset
-      sort_samples: True
-      path: data/val.index.json
     test:
       class: JsonDataset
       sort_samples: True
@@ -56,27 +39,7 @@ task:
       activation: 'relu'
     share_embedding: decoder-input-output
     d_model: 512
-  criterion:
-    class: LabelSmoothedCrossEntropy
-    epsilon: 0.1
-  trainer:
-    class: Trainer
-    optimizer:
-      class: AdamW
-      lr:
-        class: InverseSquareRootRateScheduler
-        rate: 1e-3
-        warmup_steps: 4000
-      clip_norm: 0.
-      betas: (0.9, 0.98)
-      eps: 1e-8
-      weight_decay: 1e-2
-    max_epochs: 100
-    max_steps: 1000000
-    validate_interval_step: 4000
-    assess_by: valid.criterion
-    assess_reverse: True
-    save_model_dir: checkpoints
+    checkpoints: checkpoints/best.pt
   generator:
     class: SequenceGenerator
     search:
