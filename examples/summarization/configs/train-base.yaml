@@ -72,7 +72,7 @@ task:
       scale_parameter: False
       warmup_init: False
     max_steps: 50000
-    validate_interval_epoch: 1
+    validate_interval_step: 4000
     assess_by: valid.rouge-1
     save_model_dir: checkpoints
   generator:
