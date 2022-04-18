@@ -18,44 +18,27 @@ task:
       class: InMemoryDataLoader
       sampler:
         class: SequentialSampler
-        max_samples: 64
+        max_samples: 128
     test:
       class: InMemoryDataLoader
       sampler:
         class: SequentialSampler
-        max_samples: 64
+        max_samples: 128
   data:
     train:
       class: JsonDataset
-      path: data/train.index.json
+      path: examples/summarization/data/train.index.json
     valid:
       class: JsonDataset
       sort_samples: True
-      path: data/val.index.json
+      path: examples/summarization/data/val.index.json
     test:
       class: JsonDataset
       sort_samples: True
-      path: data/test.index.json
+      path: examples/summarization/data/test.index.json
   model:
-    class: Seq2Seq
-    encoder:
-      class: TransformerEncoder
-      num_layers: 6
-      d_model: 512
-      n_head: 8
-      dim_feedforward: 2048
-      dropout: 0.1
-      activation: 'relu'
-    decoder:
-      class: TransformerDecoder
-      num_layers: 6
-      d_model: 512
-      n_head: 8
-      dim_feedforward: 2048
-      dropout: 0.1
-      activation: 'relu'
-    share_embedding: decoder-input-output
-    d_model: 512
+    class: HuggingfaceBartModel
+    pretrained_model: facebook/bart-base
   criterion:
     class: LabelSmoothedCrossEntropy
     epsilon: 0.1
@@ -64,9 +47,10 @@ task:
     optimizer:
       class: AdamW
       lr:
-        class: InverseSquareRootRateScheduler
-        rate: 5e-4
-        warmup_steps: 8000
+        class: PolynomialDecayScheduler
+        max_rate: 5e-5
+        warmup_steps: 500
+        total_steps: 15000
       clip_norm: 0.
       betas: (0.9, 0.98)
       eps: 1e-8
@@ -78,10 +62,9 @@ task:
     assess_reverse: True
     save_model_dir: checkpoints
   generator:
-    class: SequenceGenerator
-    search:
-      class: GreedySearch
-      maxlen_coef: (0, 400)
+    class: SelfContainedGenerator
+    num_beams: 4
+    max_length: 400
   evaluator:
     class: Evaluator
     metric:
@@ -99,3 +82,4 @@ env:
   fp16: True
   no_warning: True
   no_progress_bar: True
+
