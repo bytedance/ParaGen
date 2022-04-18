@@ -65,7 +65,7 @@ task:
       class: Adafactor
       lr:
         class: PolynomialDecayScheduler
-        max_rate: 1e-5
+        max_rate: 1e-3
         warmup_steps: 500
         total_steps: 50000
       relative_step: False
