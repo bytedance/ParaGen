@@ -65,15 +65,9 @@ task:
   evaluator:
     class: Evaluator
     metric:
-      rouge-1:
+      rouge:
         class: Rouge
-        ngram: 1
-      rouge-2:
-        class: Rouge
-        ngram: 2
-      rouge-l:
-        class: Rouge
-        ngram: l
+        ngram: 1,2,l
 env:
   device: cuda
   fp16: True

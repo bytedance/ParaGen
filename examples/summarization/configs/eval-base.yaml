@@ -43,20 +43,16 @@ task:
   generator:
     class: SequenceGenerator
     search:
-      class: GreedySearch
+      class: BeamSearch
       maxlen_coef: (0, 400)
+      beam: 4
+      lenpen: 2.0
   evaluator:
     class: Evaluator
     metric:
-      rouge-1:
+      rouge:
         class: Rouge
-        ngram: 1
-      rouge-2:
-        class: Rouge
-        ngram: 2
-      rouge-l:
-        class: Rouge
-        ngram: l
+        ngram: 1,2,l
 env:
   device: cuda
   fp16: True
