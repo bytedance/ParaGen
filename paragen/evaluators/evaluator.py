@@ -35,7 +35,7 @@ class Evaluator(AbstractEvaluator):
         self._display_samples = display_samples
         self._save_hypo_dir = save_hypo_dir
         self._metric_configs = metric
-        self._no_display_option = no_display_option.lower().split(',') if no_display_option is not None else None
+        self._no_display_option = no_display_option.lower().split(',') if no_display_option is not None else []
 
         self._generator, self._dataloaders, self._tokenizer, self._task_callback = None, None, None, None
         self._metric, self._postprocess = None, None
