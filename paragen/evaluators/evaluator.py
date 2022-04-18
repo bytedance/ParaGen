@@ -125,9 +125,17 @@ class Evaluator(AbstractEvaluator):
             self.eval_one_dataset(dataloader,
                                   out_path=f'{self._save_hypo_dir}/{data_name}.hypo' if self._save_hypo_dir else None)
             self._eval_update()
+            metric_logging = []
             for metric_name, metric in self._metric.items():
-                states[f'{data_name}.{metric_name}'] = metric.eval()
-            logger.info(' | '.join([f'{name}: {metric.eval()}' for name, metric in self._metric.items()]))
+                scores = metric.eval()
+                if isinstance(scores, float):
+                    states[f'{data_name}.{metric_name}'] = scores
+                    metric_logging.append((f'{data_name}.{metric_name}', scores))
+                elif isinstance(scores, Dict):
+                    for k, v in scores.items():
+                        states[f'{data_name}.{metric_name}-{k}'] = v
+                        metric_logging.append((f'{data_name}.{metric_name}-{k}', v))
+            logger.info(' | '.join([f'{name}: {scores}' for name, scores in metric_logging]))
         for metric_name in self._metric.keys():
             if len(self._dataloaders) > 0:
                 tot, cnt = 0, 0
