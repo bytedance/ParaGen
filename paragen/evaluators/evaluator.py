@@ -119,6 +119,7 @@ class Evaluator(AbstractEvaluator):
             data_name: dataloader.reset()
             for data_name, dataloader in self._dataloaders.items()
         }
+        metric_names = set()
         for data_name, dataloader in self._dataloaders.items():
             logger.info(f'eval on {data_name} dataset')
             self._eval_reset()
@@ -130,13 +131,15 @@ class Evaluator(AbstractEvaluator):
                 scores = metric.eval()
                 if isinstance(scores, float):
                     states[f'{data_name}.{metric_name}'] = scores
+                    metric_names.add(metric_name)
                     metric_logging.append((f'{data_name}.{metric_name}', scores))
                 elif isinstance(scores, Dict):
                     for k, v in scores.items():
                         states[f'{data_name}.{metric_name}-{k}'] = v
+                        metric_names.add(f'{metric_name}-{k}')
                         metric_logging.append((f'{data_name}.{metric_name}-{k}', v))
             logger.info(' | '.join([f'{name}: {scores}' for name, scores in metric_logging]))
-        for metric_name, metric_score in metric_logging:
+        for metric_name in metric_names:
             if len(self._dataloaders) > 0:
                 tot, cnt = 0, 0
                 for data_name in self._dataloaders.keys():
