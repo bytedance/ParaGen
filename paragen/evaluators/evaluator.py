@@ -136,7 +136,7 @@ class Evaluator(AbstractEvaluator):
                         states[f'{data_name}.{metric_name}-{k}'] = v
                         metric_logging.append((f'{data_name}.{metric_name}-{k}', v))
             logger.info(' | '.join([f'{name}: {scores}' for name, scores in metric_logging]))
-        for metric_name in self._metric.keys():
+        for metric_name, metric_score in metric_logging:
             if len(self._dataloaders) > 0:
                 tot, cnt = 0, 0
                 for data_name in self._dataloaders.keys():
