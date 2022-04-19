@@ -71,7 +71,7 @@ task:
       class: Adafactor
       lr:
         class: InverseSquareRootRateScheduler
-        max_rate: 5e-4
+        rate: 5e-4
         warmup_steps: 500
       relative_step: False
       scale_parameter: False
