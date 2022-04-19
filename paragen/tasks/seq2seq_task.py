@@ -74,7 +74,7 @@ class Seq2SeqTask(BaseTask):
                 val) if not self._index_only else self._tokenizer.token2index(val)
 
         if not is_training:
-            processed_sample = self._fill_text_data(processed_sample, textual_sample)
+            processed_sample = self._fill_text_data(processed_sample, sample)
 
         ntokens = len(processed_sample[self._src])
         if self._tgt in processed_sample:
