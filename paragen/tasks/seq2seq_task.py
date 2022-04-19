@@ -25,8 +25,8 @@ class Seq2SeqTask(BaseTask):
     """
 
     def __init__(self,
-                 src,
-                 tgt,
+                 src='src',
+                 tgt='tgt',
                  lang='zh',
                  maxlen=(256, 256),
                  share_vocab=False,
