@@ -1,5 +1,4 @@
-from rouge_metric import PerlRouge
-from rouge_metric import PyRouge
+from rouge import Rouge as RG
 
 from paragen.metrics import PairwiseMetric, register_metric
 
@@ -13,34 +12,21 @@ class Rouge(PairwiseMetric):
         ngram: ['1', '2', 'l'] stands for ['rouge-1', 'rouge-2', 'rouge-l']
     """
 
-    def __init__(self, lang='en', ngram='1,2,l'):
+    def __init__(self, lang='en', ngram='1,2,l', num_threads=1):
         super().__init__()
+        self._num_threads = num_threads
         self._lang = lang
         self._ngram = ngram.split(',')
-        self._rouge = PerlRouge(
-            rouge_n_max=3, rouge_l=True, rouge_w=True, rouge_w_weight=1.2,
-            rouge_s=True, rouge_su=True, skip_gap=4
-        ) if lang == 'en' else PyRouge(
-            rouge_n=(1, 2, 4), rouge_l=True, rouge_w=True,
-            rouge_w_weight=1.2, rouge_s=True, rouge_su=True, skip_gap=4
-        )
-
-    def add(self, hypo, ref):
-        """
-        Add parallel hypotheses and references to metric buffer
-        """
-        if isinstance(ref, str):
-            ref = [ref]
-        self._hypos.append(hypo)
-        self._refs.append(ref)
+        self._rouge = RG()
 
     def eval(self):
         """
         Evaluate the performance with buffered hypotheses and references.
         """
+
         if self._score is not None:
             return self._score
         else:
-            score = self._rouge.evaluate(self._hypos, self._refs)
+            score = self._rouge.get_scores(self._hypos, self._refs, avg=True)
             self._score = {name: score[f'rouge-{name}']['f'] for name in self._ngram}
         return self._score
