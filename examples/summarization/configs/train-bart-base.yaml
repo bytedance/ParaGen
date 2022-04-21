@@ -13,7 +13,7 @@ task:
       class: InMemoryDataLoader
       sampler:
         class: ShuffleSampler
-        max_samples: 64
+        max_samples: 32
     valid:
       class: InMemoryDataLoader
       sampler:
@@ -54,6 +54,7 @@ task:
       weight_decay: 0.01
       no_decay: ["norm","bias"]
       eps: 1e-8
+      update_frequency: 2
     max_steps: 15000
     assess_by: valid.criterion
     save_model_dir: checkpoints
