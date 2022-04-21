@@ -6,6 +6,7 @@ from torch.multiprocessing import Queue, Process
 from paragen.metrics import PairwiseMetric, register_metric
 
 
+@register_metric
 class Rouge(PairwiseMetric):
     """
     Rouge evaluates rouge scores of produced hypotheses by comparing with references.
