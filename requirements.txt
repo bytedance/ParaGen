@@ -13,4 +13,4 @@ pyyaml
 numpy
 more-itertools
 tabulate
-rouge_metric
+rouge
