@@ -3,7 +3,7 @@ task:
   mode: train
   src: src
   tgt: tgt
-  maxlen: (1024,400)
+  maxlen: (1024,300)
   preprocessed: True
   tokenizer:
     class: HuggingfaceTokenizer
@@ -40,8 +40,7 @@ task:
     class: HuggingfaceBartModel
     pretrained_model: facebook/bart-base
   criterion:
-    class: LabelSmoothedCrossEntropy
-    epsilon: 0.1
+    class: CrossEntropy
   trainer:
     class: Trainer
     optimizer:
@@ -55,8 +54,12 @@ task:
     save_model_dir: checkpoints
   generator:
     class: SelfContainedGenerator
-    num_beams: 4
-    max_length: 400
+    num_beams: 5
+    max_length: 300
+    min_length: 100
+    no_repeat_ngram_size: 3
+    length_penalty: 2.0
+    early_stopping: True
   evaluator:
     class: Evaluator
     metric:
@@ -65,7 +68,7 @@ task:
         ngram: 1,2,l
 env:
   device: cuda
-  fp16: True
+  fp16: False
   no_warning: True
   no_progress_bar: True
 
