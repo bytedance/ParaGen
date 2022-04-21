@@ -56,6 +56,7 @@ task:
       eps: 1e-8
       update_frequency: 2
     max_steps: 15000
+    save_steps: 3000
     assess_by: valid.criterion
     save_model_dir: checkpoints
   generator:
