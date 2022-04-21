@@ -50,7 +50,7 @@ task:
       clip_norm: 0.
       eps: 1e-8
     max_steps: 10000
-    validate_interval_steps: 2000
+    validate_interval_step: 2000
     assess_by: valid.rouge-1
     save_model_dir: checkpoints
   generator:
