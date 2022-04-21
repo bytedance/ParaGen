@@ -48,7 +48,13 @@ def build_optimizer(model, configs, enable_apex=False):
     else:
         import importlib
         cls = None
-        for module in ['torch.optim', 'transformers']:
+        if name.startswith('Torch'):
+            available_optimizer_lib, name = ['torch.optim'], name[5:]
+        elif name.startswith('Huggingface'):
+            available_optimizer_lib, name = ['transformers'], name[11:]
+        else:
+            available_optimizer_lib = ['torch.optim', 'transformers']
+        for module in available_optimizer_lib:
             try:
                 mod = importlib.import_module(module)
                 cls = getattr(mod, name)
