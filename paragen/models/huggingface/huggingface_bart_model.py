@@ -49,9 +49,9 @@ class HuggingfaceBartModel(AbstractEncoderDecoderModel):
             - log probability of start and end position
         """
         output = self._model(src,
-                             attention_mask=src.eq(self._special_tokens['pad']),
+                             attention_mask=src.ne(self._special_tokens['pad']),
                              decoder_input_ids=tgt,
-                             decoder_attention_mask=tgt.eq(self._special_tokens['pad']),)
+                             decoder_attention_mask=tgt.ne(self._special_tokens['pad']),)
         return output.logits
 
     def generate(self, *args, **kwargs):
