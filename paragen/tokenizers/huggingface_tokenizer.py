@@ -3,7 +3,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 from transformers import AutoTokenizer
-import torch
 
 from paragen.tokenizers import AbstractTokenizer, register_tokenizer
 
@@ -46,7 +45,7 @@ class HuggingfaceTokenizer(AbstractTokenizer):
         Decode a list of index back into a textual sentence
         """
 
-        return self._tokenizer.decode(torch.LongTensor(output), *args, **kwargs)
+        return self._tokenizer.decode(output, *args, **kwargs)
 
     def __call__(self, *args, **kwargs):
         return self._tokenizer(*args, **kwargs)
