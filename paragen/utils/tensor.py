@@ -172,13 +172,7 @@ def remove_special_tokens(idx, bos: int, eos: int, pad: int):
         - index list without special tokens
     """
     if isinstance(idx, list) and isinstance(idx[0], int):
-        if idx[0] == bos:
-            idx = idx[1:]
-        eos_pos = find_eos(idx, eos)
-        if eos_pos is not None:
-            idx = idx[:eos_pos]
-        idx = [i for i in idx if i != pad]
-        return idx
+        return [i for i in idx if i not in [bos, eos, pad]]
     else:
         return [remove_special_tokens(i, bos, eos, pad) for i in idx]
 
