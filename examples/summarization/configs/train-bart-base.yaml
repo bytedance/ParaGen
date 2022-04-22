@@ -40,23 +40,23 @@ task:
     class: HuggingfaceBartModel
     pretrained_model: facebook/bart-base
   criterion:
-    class: CrossEntropy
+      class: LabelSmoothedCrossEntropy
+      epsilon: 0.1
   trainer:
     class: Trainer
     optimizer:
-      class: HuggingfaceAdamW
+      class: AdamW
       lr:
         class: PolynomialDecayScheduler
         max_rate: 5e-5
         warmup_steps: 500
-        total_steps: 15000
-      clip_norm: 1.0
+        total_steps: 50000
+      clip_norm: 0.
       weight_decay: 0.01
-      no_decay: ["norm","bias"]
       eps: 1e-8
       update_frequency: 2
-    max_steps: 15000
-    save_steps: 3000
+    max_steps: 50000
+    save_steps: 5000
     assess_by: valid.criterion
     save_model_dir: checkpoints
   generator:
