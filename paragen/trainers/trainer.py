@@ -57,8 +57,8 @@ class Trainer(AbstractTrainer):
                  save_steps=None,
                  save_epochs=None,
                  log_interval=500,
-                 start_validate_epoch=1,
-                 start_validate_step=1,
+                 start_validate_epoch=0,
+                 start_validate_step=0,
                  assess_by='criterion',
                  assess_reverse=False,
                  tensorboard_dir=None,
@@ -71,7 +71,7 @@ class Trainer(AbstractTrainer):
                  reset_optimizer=False,
                  reset_trainer=False,
                  no_best_avg=True,
-                 enable_apex=False
+                 enable_apex=False,
                  ):
         super().__init__(max_epochs=max_epochs,
                          max_steps=max_steps,
@@ -180,7 +180,9 @@ class Trainer(AbstractTrainer):
         else:
             mkdir(self._tensorboard_dir)
 
-        if self._env.is_master() and (self._restore_path is not None or self._model.is_pretrained()):
+        if self._env.is_master() \
+            and (self._restore_path is not None or self._model.is_pretrained()) \
+            and (self._start_validate_epoch == 0 and self._start_validate_step == 0):
             self._eval()
 
         if self._env.distributed_world > 1:
