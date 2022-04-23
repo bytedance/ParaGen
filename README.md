@@ -31,7 +31,7 @@ HOROVOD_WITH_PYTORCH=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_NCCL_HOME=${NCCL_ROOT
 ```
 Then run `ParaGen` with `horovod`:
 ```bash
-horovodrun -np {GPU_NUM} -H localhost:{GPU_NUM} paragen-run --configs {config_file}
+horovodrun -np {GPU_NUM} -H localhost:{GPU_NUM} paragen-run --config {config_file}
 ```
 * Install lightseq to faster train:
 ``` bash
