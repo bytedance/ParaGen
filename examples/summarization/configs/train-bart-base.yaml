@@ -45,15 +45,16 @@ task:
   trainer:
     class: Trainer
     optimizer:
-      class: AdamW
+      class: Adafactor
       lr:
         class: PolynomialDecayScheduler
         max_rate: 5e-5
         warmup_steps: 1000
         total_steps: 15000
       clip_norm: 0.
-      weight_decay: 0.01
-      eps: 1e-8
+      relative_step: False
+      scale_parameter: False
+      warmup_init: False
       update_frequency: 2
     max_steps: 15000
     save_steps: 1000
