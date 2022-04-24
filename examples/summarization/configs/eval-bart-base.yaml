@@ -53,6 +53,7 @@ task:
       rouge:
         class: Rouge
         ngram: 1,2,l
+        num_threads: 8
 env:
   device: cuda
   fp16: True
