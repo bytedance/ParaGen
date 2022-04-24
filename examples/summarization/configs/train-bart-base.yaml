@@ -3,7 +3,7 @@ task:
   mode: train
   src: src
   tgt: tgt
-  maxlen: (1024,300)
+  maxlen: (1024,512)
   preprocessed: True
   tokenizer:
     class: HuggingfaceTokenizer
@@ -49,30 +49,16 @@ task:
       lr:
         class: PolynomialDecayScheduler
         max_rate: 5e-5
-        warmup_steps: 500
-        total_steps: 50000
+        warmup_steps: 1000
+        total_steps: 15000
       clip_norm: 0.
       weight_decay: 0.01
       eps: 1e-8
       update_frequency: 2
-    max_steps: 50000
-    save_steps: 5000
+    max_steps: 15000
+    save_steps: 1000
     assess_by: valid.criterion
     save_model_dir: checkpoints
-  generator:
-    class: SelfContainedGenerator
-    num_beams: 5
-    max_length: 300
-    min_length: 100
-    no_repeat_ngram_size: 3
-    length_penalty: 2.0
-    early_stopping: True
-  evaluator:
-    class: Evaluator
-    metric:
-      rouge:
-        class: Rouge
-        ngram: 1,2,l
 env:
   device: cuda
   fp16: True
