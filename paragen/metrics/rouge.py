@@ -22,6 +22,11 @@ class Rouge(PairwiseMetric):
         self._ngram = ngram.split(',')
         self._rouge = RG()
 
+    def add(self, hypo, ref):
+        if hypo == '':
+            hypo = '<empty>'
+        super().add(hypo, ref)
+
     def eval(self):
         """
         Evaluate the performance with buffered hypotheses and references.
