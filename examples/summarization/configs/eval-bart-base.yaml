@@ -42,9 +42,9 @@ task:
   generator:
     class: SelfContainedGenerator
     num_beams: 5
-    max_length: 300
-    min_length: 100
-    no_repeat_ngram_size: 3
+    max_length: 400
+    min_length: 200
+    no_repeat_ngram_size: 4
     length_penalty: 2.0
     early_stopping: True
   evaluator:
