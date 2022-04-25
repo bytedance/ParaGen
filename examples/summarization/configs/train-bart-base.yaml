@@ -3,7 +3,7 @@ task:
   mode: train
   src: src
   tgt: tgt
-  maxlen: (1024,512)
+  maxlen: (1024,300)
   preprocessed: True
   tokenizer:
     class: HuggingfaceTokenizer
@@ -48,8 +48,8 @@ task:
       class: Adafactor
       lr:
         class: PolynomialDecayScheduler
-        max_rate: 5e-5
-        warmup_steps: 1000
+        max_rate: 3e-5
+        warmup_steps: 500
         total_steps: 15000
       clip_norm: 0.
       relative_step: False

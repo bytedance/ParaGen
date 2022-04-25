@@ -3,7 +3,7 @@ task:
   mode: evaluate
   src: src
   tgt: tgt
-  maxlen: (1024,512)
+  maxlen: (1024,300)
   preprocessed: True
   tokenizer:
     class: HuggingfaceTokenizer
@@ -42,7 +42,7 @@ task:
   generator:
     class: SelfContainedGenerator
     num_beams: 5
-    max_length: 512
+    max_length: 300
     min_length: 100
     no_repeat_ngram_size: 3
     length_penalty: 2.0
