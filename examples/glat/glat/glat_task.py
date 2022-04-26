@@ -44,10 +44,10 @@ class GLATTranslationTask(TranslationTask):
         Build a criterion
         """
         self._criterion = create_criterion(self._criterion_configs)
-        self._criterion.build(self._model, {
-            'length': {'padding_idx': self._tokenizer[self._tgt].pad},
-            'token': {}
-        })
+        self._criterion.build(self._model,
+                              token={'padding_idx': self._tokenizer[self._tgt].pad},
+                              length={}
+        )
 
     def _build_trainer(self):
         """
