@@ -33,7 +33,7 @@ class GLATModel(AbstractEncoderDecoderModel):
                  d_model,
                  max_output_length=1024,
                  share_embedding=None,
-                 decoder_input='encoder_mapping',
+                 decoder_input='uniform_copy',
                  path=None):
         super().__init__(path=path)
         self._encoder_config, self._decoder_config = encoder, decoder
@@ -43,7 +43,7 @@ class GLATModel(AbstractEncoderDecoderModel):
         self._decoder_input = decoder_input
         self._path = path
 
-        self._decoder_embed = None
+        self._encoder_embed, self._decoder_embed = None, None
         self._length_predictor = None
         self._src_special_tokens, self._tgt_special_tokens = None, None
         self._seed = 0
@@ -73,7 +73,7 @@ class GLATModel(AbstractEncoderDecoderModel):
                             special_tokens=tgt_special_tokens,
                             out_proj=tgt_out_proj)
 
-        self._decoder_embed = tgt_embed
+        self._encoder_embed, self._decoder_embed = src_embed, tgt_embed
         self._length_predictor = LinearClassifier(d_model=self._d_model,
                                                   labels=self._max_output_length,
                                                   invalid_classes=[0])
@@ -97,13 +97,15 @@ class GLATModel(AbstractEncoderDecoderModel):
                 - **token**: log probability of predicted tokens
                 - **length**: log probability of length
         """
-        src_hidden, src_padding_mask, cls_token = self._encoder(src=src)
+        with local_seed(self.seed):
+            src_hidden, src_padding_mask, cls_token = self._encoder(src=src)
 
         length_logits = self._length_predictor(cls_token)
         decoder_embed = self.calc_decoder_input(src_padding_mask,
                                                 tgt_padding_mask,
-                                                target,
-                                                fusing_target_mask)
+                                                source=src,
+                                                target=target,
+                                                fusing_target_mask=fusing_target_mask)
         with local_seed(self.seed):
             logits = self._decoder(tgt=decoder_embed,
                                    memory=src_hidden,
@@ -114,6 +116,7 @@ class GLATModel(AbstractEncoderDecoderModel):
     def calc_decoder_input(self,
                            src_padding_mask,
                            tgt_padding_mask,
+                           source=None,
                            target=None,
                            fusing_target_mask=None):
         """
@@ -132,11 +135,14 @@ class GLATModel(AbstractEncoderDecoderModel):
             decoder_input = create_sequence(tgt_padding_mask,
                                             self._tgt_special_tokens['unk'],
                                             pad_id=self._tgt_special_tokens['pad'])
+            decoder_input[:, 0] = self._tgt_special_tokens['bos']
+            length_tgt = ((~tgt_padding_mask).int()).sum(dim=-1)
+            decoder_input.scatter_(1, length_tgt[:, None] - 1, self._tgt_special_tokens['eos'])
             decoder_embed = self._decoder_embed(decoder_input)
-        elif self._decoder_input == 'encoder_mapping':
-            decoder_embed = decoder_encoder_map(self._encoder.get('token_embed'),
-                                                src_padding_mask,
-                                                tgt_padding_mask)
+        elif self._decoder_input == 'uniform_copy':
+            decoder_embed = uniform_copy(self._encoder_embed(source),
+                                         src_padding_mask,
+                                         tgt_padding_mask)
         else:
             raise NotImplementedError
 
@@ -183,7 +189,7 @@ class GLATModel(AbstractEncoderDecoderModel):
         return self._length_predictor
 
 
-def decoder_encoder_map(encoder_embed, encoder_padding_mask, decoder_padding_mask):
+def uniform_copy(encoder_embed, encoder_padding_mask, decoder_padding_mask):
     """
     assign encoder embedding to decoder one
 

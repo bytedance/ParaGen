@@ -2,8 +2,8 @@
 
 | Task                   | sacrebleu | tok bleu |
 |------------------------|-----------|----------|
-| WMT14 En-De            | 24.40     | 25.01    |
-| WMT14 En-De (avg ckpt) | 24.58     | 25.19    |
+| WMT14 En-De            | 24.40     | 24.98    |
+| WMT14 En-De (avg ckpt) | 24.58     | 25.29    |
 
 # WMT14 En-De
 
@@ -22,7 +22,8 @@ Make sure to train GLAT with `64k` tokens within a batch if you are using less G
 
 After training, the model is evaluate with
 ```bash
-paragen-run --config configs/eval.yaml --lib glat
+python scripts/average_checkpoints.py --dir checkpoints --prefix last
+paragen-run --config configs/eval-npd.yaml --lib glat
 ```
 
 # Serialize GLAT

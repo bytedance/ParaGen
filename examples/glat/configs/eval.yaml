@@ -1,6 +1,6 @@
 task:
   class: GLATTranslationTask
-  mode: train
+  mode: evaluate
   src: en
   tgt: de
   maxlen: 256
@@ -29,8 +29,8 @@ task:
       class: ParallelTextDataset
       sort_samples: True
       path:
-        de: data/test.de
-        en: data/test.en
+        de: data/test.en-de.de
+        en: data/test.en-de.en
   model:
     class: GLATModel
     encoder:

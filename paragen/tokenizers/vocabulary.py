@@ -46,8 +46,12 @@ class Vocabulary(AbstractTokenizer):
         self._idx2token = {}
         if not self._no_special_symbols:
             self._add_symbols(SPECIAL_SYMBOLS)
-        if preserved_tokens:
-            self._preserved_tokens = read_list(preserved_tokens)
+        if preserved_tokens is not None:
+            if isinstance(preserved_tokens, List):
+                self._preserved_tokens = preserved_tokens
+            else:
+                self._preserved_tokens = read_list(preserved_tokens)
+            self._preserved_tokens = [f'<{t}>' for t in self._preserved_tokens]
             self._add_symbols(self._preserved_tokens)
         if self._path:
             logger.info('build vocab from frequency file {}'.format(path))
@@ -224,4 +228,8 @@ class Vocabulary(AbstractTokenizer):
     @property
     def unk_token(self):
         return self._unk_token
+
+    @property
+    def special_tokens(self):
+        return {t[1:-1]: self._token2idx[t] for t in self._preserved_tokens + SPECIAL_SYMBOLS}
 
