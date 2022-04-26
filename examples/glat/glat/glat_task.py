@@ -31,6 +31,13 @@ class GLATTranslationTask(TranslationTask):
         super().__init__(*args, **kwargs)
         self._infering = False
 
+    def _build_tokenizers(self):
+        """
+        Build tokenizers for source and target languages
+        """
+        self._tokenizer_configs[self._src]['preserved_tokens'] = ['len']
+        super()._build_tokenizers()
+
     def _build_trainer(self):
         """
         Build a trainer to schedule training process
@@ -64,9 +71,8 @@ class GLATTranslationTask(TranslationTask):
         samples = [sample['processed'] for sample in samples]
         samples = [sample for sample in samples if len(sample[self._src]) > 0 and len(sample[self._tgt]) > 0]
         samples = reorganize(samples)
-        src = samples[self._src]
-        if self._training:
-            src = [v[:self._maxlen] for v in src]
+        src = [[self._tokenizer[self._src].special_tokens['len']] + s for s in samples[self._src]]
+        src = [v[:self._maxlen] for v in src]
         src = convert_idx_to_tensor(src, pad=self._tokenizer[self._src].pad)
         if not self._infering:
             tgt = samples[self._tgt]

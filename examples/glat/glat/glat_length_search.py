@@ -3,63 +3,75 @@ from torch import Tensor
 from typing import Callable, Tuple
 from paragen.utils.ops import local_seed
 from paragen.modules.utils import create_padding_mask_from_length
-from paragen.modules.search.abstract_search import AbstractSearch
+from paragen.modules.search import AbstractSearch, register_search
 
-"""
-Args: window_size L
 
-input: length [B], encoder_out [S * B * D], encoder_padding_mask [B * S]
-
-mid: l' in [length-window_size, length+window_size] [B, 2*L+1]
-predict sequennce candidate for each l' [B, 2 * L + 1, 2 * L + 1], [B, 2 * L + 1]
-rerank candidates [B, 2*L+1]
-
-output: sequence
-"""
+@register_search
 class GLATLengthSearcher(AbstractSearch):
+    """
+    Args: window_size L
+
+    input: length [B], encoder_out [S * B * D], encoder_padding_mask [B * S]
+
+    mid: l' in [length-window_size, length+window_size] [B, 2*L+1]
+    predict sequennce candidate for each l' [B, 2 * L + 1, 2 * L + 1], [B, 2 * L + 1]
+    rerank candidates [B, 2*L+1]
+
+    output: sequence
+    """
     def __init__(self,
-                 window_size=5,
-                 max_len=256,
-                 seed=None,
-                 padding_token=None,
-                 calc_decoder_input: Callable[[Tensor, Tensor], Tensor]=None,
-                 decoder=None) -> None:
+                 beam=7,
+                 ) -> None:
         super().__init__()
-        self._window_size = window_size
-        self._max_len = max_len
+        self._beam = beam
+
+        self._maxlen = None
+        self._seed = None
+        self._padding_token = None
+        self._calc_decoder_input = None
+        self._decoder = None
+
+    def build(self,
+              maxlen=256,
+              seed=None,
+              padding_token=None,
+              calc_decoder_input: Callable[[Tensor, Tensor], Tensor] = None,
+              decoder=None):
+        self._maxlen = maxlen
         self._seed = seed
         self._padding_token = padding_token
         self._calc_decoder_input = calc_decoder_input
         self._decoder = decoder
 
-    def build(self, *args, **kwargs):
-        pass
-
-    def forward(self, 
-               length: Tensor,
-               src_padding_mask: Tensor,
-               src_hidden: Tensor) -> Tensor:
-        _lower_bound = torch.tensor(1).to(length)
-        _upper_bound = torch.tensor(self._max_len).to(length)
-        maxlen = torch.minimum(_upper_bound, length.max() + self._window_size)
-        candidates = list()
-        for offset in range(-self._window_size, self._window_size + 1):
-            _length = length + offset
-            _length = torch.maximum(_lower_bound, _length)
-            _length = torch.minimum(_upper_bound, _length)
-            candidates.append(self._search(_length, maxlen, src_padding_mask, src_hidden))
-        scores = torch.stack([candidate[1] for candidate in candidates])
-        best_idxs = scores.max(dim=0).indices
-        outputs = torch.stack([candidates[idx][0][i] for i, idx in enumerate(best_idxs)])
+    def forward(self,
+                length: Tensor,
+                src: Tensor,
+                src_padding_mask: Tensor,
+                src_hidden: Tensor) -> Tensor:
+        bsz, srclen = src_padding_mask.shape
+        window = torch.arange(self._beam, device=length.device) - (self._beam // 2)
+        length = length[:, None] + window[None, :]
+        length = length.clamp(2, self._maxlen)
+        length = length.reshape(-1)
+        maxlen = length.max()
+        src = src[:, None].repeat(1, self._beam, 1).reshape(bsz * self._beam, -1)
+        src_padding_mask = src_padding_mask[:, None].repeat(1, self._beam, 1).reshape(bsz * self._beam, -1)
+        src_hidden = src_hidden[:, :, None].repeat(1, 1, self._beam, 1).reshape(srclen, bsz * self._beam, -1)
+        candidates, scores = self._search(length, maxlen, src, src_padding_mask, src_hidden)
+        candidates = candidates.reshape(bsz, self._beam, -1)
+        scores = scores.reshape(bsz, self._beam)
+        best_idx = scores.max(dim=1).indices
+        outputs = candidates.gather(1, best_idx[:, None, None].repeat(1, 1, maxlen)).squeeze(1)
         return outputs
 
     def _search(self,
                 length: Tensor,
                 maxlen,
+                src: Tensor,
                 src_padding_mask: Tensor,
                 src_hidden: Tensor) -> Tuple[Tensor, Tensor]:
         tgt_padding_mask = create_padding_mask_from_length(length, maxlen)
-        decoder_input = self._calc_decoder_input(src_padding_mask, tgt_padding_mask)
+        decoder_input = self._calc_decoder_input(src_padding_mask, tgt_padding_mask, source=src)
         with local_seed(self._seed):
             logits = self._decoder(decoder_input,
                                    src_hidden,

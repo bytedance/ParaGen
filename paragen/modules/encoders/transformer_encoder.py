@@ -35,6 +35,7 @@ class TransformerEncoder(AbstractEncoder):
                  attention_dropout=0.,
                  activation='relu',
                  return_seed=False,
+                 keep_seed_in_hidden=False,
                  learn_pos=False,
                  normalize_before=False,
                  embed_scale=True,
@@ -52,6 +53,7 @@ class TransformerEncoder(AbstractEncoder):
         self._attention_dropout = attention_dropout
         self._activation = activation
         self._return_seed = return_seed
+        self._keep_hidden_in_hidden = keep_seed_in_hidden
         self._learn_pos = learn_pos
         self._normalize_before = normalize_before
         self._name = name
@@ -134,7 +136,8 @@ class TransformerEncoder(AbstractEncoder):
             x = self._norm(x)
 
         if self._return_seed:
-            encoder_out = x[1:], src_padding_mask[:, 1:], x[0]
+            shift = 0 if self._keep_hidden_in_hidden else 1
+            encoder_out = x[shift:], src_padding_mask[:, shift:], x[0]
         else:
             encoder_out = x, src_padding_mask
 

@@ -264,3 +264,4 @@ class TranslationTask(BaseTask):
                                bos=self._tokenizer[self._tgt].bos,
                                eos=self._tokenizer[self._tgt].eos,
                                **kwargs)
+

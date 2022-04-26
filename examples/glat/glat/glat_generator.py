@@ -6,13 +6,12 @@ import torch
 import torch.nn as nn
 
 from paragen.generators import AbstractGenerator, register_generator
+from paragen.modules.search import create_search
 from paragen.modules.utils import create_padding_mask_from_length
 from paragen.utils.io import mkdir, UniIO, cp
 from paragen.utils.ops import local_seed
 from paragen.utils.runtime import Environment
 from paragen.utils.tensor import to_device
-
-from .glat_length_search import GLATLengthSearcher
 
 
 @register_generator
@@ -53,15 +52,14 @@ class GLATGenerator(AbstractGenerator):
         self._encoder, self._decoder = model.encoder, model.decoder
         self._length_predictor, self._calc_decoder_input = model.length_predictor, model.calc_decoder_input
         self._src_special_tokens, self._tgt_special_tokens = src_special_tokens, tgt_special_tokens
-        window_size = self._search_configs.get('window_size', None) \
-                        if self._search_configs is not None else None
-        if window_size is not None:
-            self._length_searcher = GLATLengthSearcher(window_size=window_size,
-                                                       max_len=self._model._max_output_length,
-                                                       seed=self.seed,
-                                                       padding_token=self._tgt_special_tokens['pad'],
-                                                       calc_decoder_input=self._calc_decoder_input,
-                                                       decoder=self._decoder)
+
+        if self._search_configs is not None:
+            self._length_searcher = create_search(self._search_configs)
+            self._length_searcher.build(maxlen=self._model._max_output_length,
+                                        seed=self.seed,
+                                        padding_token=self._tgt_special_tokens['pad'],
+                                        calc_decoder_input=self._calc_decoder_input,
+                                        decoder=self._decoder)
 
     def _forward(self, src, tgt_padding_mask=None):
         """
@@ -75,12 +73,13 @@ class GLATGenerator(AbstractGenerator):
         Returns:
             decoder_output: results inferred by search algorithm on decoder
         """
-        src_hidden, src_padding_mask, length_token = self._encoder(src)
+        with local_seed(self.seed):
+            src_hidden, src_padding_mask, length_token = self._encoder(src)
 
         if (tgt_padding_mask is None) and (self._length_searcher is not None):
             tgt_length = self._length_predictor(length_token)
             tgt_length = tgt_length.max(dim=-1).indices
-            decoder_output = self._length_searcher(tgt_length, src_padding_mask, src_hidden)
+            decoder_output = self._length_searcher(tgt_length, src, src_padding_mask, src_hidden)
             return decoder_output
 
         if tgt_padding_mask is None:
@@ -88,7 +87,8 @@ class GLATGenerator(AbstractGenerator):
             tgt_length = tgt_length.max(dim=-1).indices
             tgt_padding_mask = create_padding_mask_from_length(tgt_length)
         decoder_input = self._calc_decoder_input(src_padding_mask,
-                                                 tgt_padding_mask)
+                                                 tgt_padding_mask,
+                                                 source=src)
         with local_seed(self.seed):
             logits = self._decoder(decoder_input, src_hidden, tgt_padding_mask, src_padding_mask)
         _, decoder_output = logits.max(dim=-1)
