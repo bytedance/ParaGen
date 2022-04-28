@@ -24,7 +24,7 @@ class HuggingfaceBartModel(AbstractEncoderDecoderModel):
         self._model = None
         self._special_tokens = None
 
-    def build(self, src_vocab_size, tgt_vocab_size, src_special_tokens, tgt_special_tokens):
+    def _build(self, src_vocab_size, tgt_vocab_size, src_special_tokens, tgt_special_tokens):
         """
         Build model with vocabulary size and special tokens
 
