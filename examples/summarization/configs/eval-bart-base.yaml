@@ -9,11 +9,6 @@ task:
     class: HuggingfaceTokenizer
     tokenizer_name: facebook/bart-base
   dataloader:
-    train:
-      class: InMemoryDataLoader
-      sampler:
-        class: ShuffleSampler
-        max_samples: 32
     valid:
       class: InMemoryDataLoader
       sampler:
@@ -25,9 +20,6 @@ task:
         class: SequentialSampler
         max_samples: 128
   data:
-    train:
-      class: JsonDataset
-      path: data/train.index.json
     valid:
       class: JsonDataset
       sort_samples: True
