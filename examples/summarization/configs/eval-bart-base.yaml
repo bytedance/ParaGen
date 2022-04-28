@@ -56,7 +56,5 @@ task:
         num_threads: 1
 env:
   device: cuda
-  fp16: True
   no_warning: True
-  no_progress_bar: True
 
