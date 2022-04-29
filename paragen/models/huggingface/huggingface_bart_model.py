@@ -1,3 +1,7 @@
+import logging
+logger = logging.getLogger(__name__)
+
+import torch
 from transformers import BartForConditionalGeneration
 
 from paragen.models import register_model
@@ -37,6 +41,26 @@ class HuggingfaceBartModel(AbstractEncoderDecoderModel):
         assert src_special_tokens['bos'] == 0
         self._model = BartForConditionalGeneration.from_pretrained(self._pretrained_model, forced_bos_token_id=0)
         self._special_tokens = src_special_tokens
+
+    def load(self, path, device, strict=False):
+        """
+        Load model from path and move model to device.
+
+        Args:
+            path: path to restore model
+            device: running device
+            strict: load model strictly
+        """
+        load_huggingface_model = False
+        if path.startswith('hf:'):
+            path = path[3:]
+            load_huggingface_model = True
+        if load_huggingface_model:
+            with open(path, 'rb') as fin:
+                state_dict = torch.load(fin, map_location='cpu')
+                self._model.load_state_dict(state_dict)
+        else:
+            super().load(path, device=device, strict=strict)
 
     def forward(self, src, tgt):
         """
