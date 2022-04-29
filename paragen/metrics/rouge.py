@@ -1,5 +1,6 @@
 from functools import reduce
 
+import nltk
 from rouge import Rouge as RG
 from torch.multiprocessing import Queue, Process
 
@@ -25,6 +26,9 @@ class Rouge(PairwiseMetric):
     def add(self, hypo, ref):
         if hypo == '':
             hypo = '<empty>'
+        else:
+            hypo = '\n'.join(nltk.sent_tokenize(hypo))
+            ref = '\n'.join(nltk.sent_tokenize(ref))
         super().add(hypo, ref)
 
     def eval(self):
