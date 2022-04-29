@@ -21,7 +21,7 @@ for ele in unknown:
 metric = create_metric(conf)
 metric.build()
 
-with open(args.hypo, 'r ') as fhypo, open(args.ref, 'r') as fref:
+with open(args.hypo, 'r') as fhypo, open(args.ref, 'r') as fref:
     for hypo, ref in zip(fhypo, fref):
         hypo, ref = hypo.strip('\n'), ref.strip('\n')
         metric.add(hypo, ref)
