@@ -4,7 +4,7 @@ We benchmark summarization task on Multi-News dataset with pretrained BART-base 
 
 | Task | rouge-1 | rouge-2 | rouge-l | 
 | --- | --- | --- | --- |
-| Multi-News | 46.57 | 17.80 | 42.83 |
+| Multi-News | 46.80 | 17.93 | 43.01 |
 
 ## Dependency
 
@@ -27,7 +27,7 @@ paragen-preprocess --config configs/preprocess.yaml
 #### Train BART-base model
 Then we train bart-base model on preprocessed data
 ```bash
-paragen-run --config configs/train-bart-base.yaml
+paragen-run --config configs/train-bart-base.yaml --task.model.path {MODEL_PATH}
 ```
 
 #### Evaluate model
