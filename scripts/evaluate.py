@@ -1,4 +1,8 @@
+from typing import Dict
 import argparse
+import importlib
+import logging
+logger = logging.getLogger(__name__)
 
 from paragen.metrics import create_metric
 from paragen.utils.data import possible_eval
@@ -7,7 +11,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--hypo', type=str, help='hypothesis')
 parser.add_argument('--ref', type=str, help='ground truth reference')
 parser.add_argument('--metric', type=str, help='metric class name')
+parser.add_argument('--lib', type=str, help='external lib')
 args, unknown = parser.parse_known_args()
+
+if args.lib:
+    path = args.lib.strip('\n')
+    for line in path.split(','):
+        logger.info(f'import module from {line}')
+        line = line.replace('/', '.')
+        importlib.import_module(line)
 
 conf = {'class': args.metric}
 current_key = None
@@ -27,4 +39,9 @@ with open(args.hypo, 'r') as fhypo, open(args.ref, 'r') as fref:
         metric.add(hypo, ref)
 
 scores = metric.eval()
-print(scores)
+
+if isinstance(scores, float):
+    print(f'{args.metric}: {scores}')
+elif isinstance(scores, Dict):
+    for k, v in scores.items():
+        print(f'{args.metric}-{k}: {v}')
