@@ -16,7 +16,7 @@ class MultiTaskCriterion(AbstractCriterion):
         self._names = [name for name in self._criterion_configs]
         self._criterions, self._weights = None, None
 
-    def _build(self, model, padding_idx=-1):
+    def _build(self, model, **kwargs):
         """
         Build multi-task criterion by dispatch args to each criterion
 
@@ -30,7 +30,7 @@ class MultiTaskCriterion(AbstractCriterion):
             criterion_config = self._criterion_configs[name]
             self._weights[name] = criterion_config.pop('weight') if 'weight' in criterion_config else 1
             self._criterions[name] = create_criterion(self._criterion_configs[name])
-            self._criterions[name].build(model, padding_idx)
+            self._criterions[name].build(model, **kwargs[name] if name in kwargs else kwargs)
 
     def forward(self, net_input, net_output):
         """
