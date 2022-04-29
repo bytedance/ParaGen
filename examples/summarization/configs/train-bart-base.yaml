@@ -19,11 +19,6 @@ task:
       sampler:
         class: SequentialSampler
         max_samples: 128
-    test:
-      class: InMemoryDataLoader
-      sampler:
-        class: SequentialSampler
-        max_samples: 128
   data:
     train:
       class: JsonDataset
@@ -32,10 +27,6 @@ task:
       class: JsonDataset
       sort_samples: True
       path: data/val.index.json
-    test:
-      class: JsonDataset
-      sort_samples: True
-      path: data/test.index.json
   model:
     class: HuggingfaceBartModel
     pretrained_model: facebook/bart-base
