@@ -22,11 +22,9 @@ task:
   data:
     valid:
       class: JsonDataset
-      sort_samples: True
       path: data/val.index.json
     test:
       class: JsonDataset
-      sort_samples: True
       path: data/test.index.json
   model:
     class: HuggingfaceBartModel
