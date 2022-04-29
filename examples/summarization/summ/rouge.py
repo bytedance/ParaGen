@@ -83,9 +83,9 @@ def eval(hypo, ref, tmp_dir='.tmp_pyrouge'):
     cnt = len(hypo)
     current_time = str(time.time()).replace('.', '')
 
-    tmp_time_dir = f'{tmp_dir}/{current_time}'
-    hypo_dir, ref_dir = f'{tmp_time_dir}/hypo', f'{tmp_time_dir}/ref'
-    mkdir(tmp_time_dir)
+    tmp_dir = f'{tmp_dir}/{current_time}'
+    hypo_dir, ref_dir = f'{tmp_dir}/hypo', f'{tmp_dir}/ref'
+    mkdir(tmp_dir)
     mkdir(hypo_dir), mkdir(ref_dir)
 
     def write(url, s):
