@@ -2,7 +2,6 @@ from typing import Optional
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from paragen.modules.decoders import AbstractDecoder, register_decoder
 from paragen.modules.layers.sinusoidal_positional_embedding import SinusoidalPositionalEmbedding
@@ -39,6 +38,8 @@ class TransformerDecoder(AbstractDecoder):
                  activation='relu',
                  learn_pos=False,
                  normalize_before=False,
+                 embed_scale=True,
+                 embed_layer_norm=False,
                  output_bias=False,
                  max_pos=1024,
                  share_layers=False,
@@ -56,12 +57,13 @@ class TransformerDecoder(AbstractDecoder):
         self._normalize_before = normalize_before
         self._output_bias = output_bias
         self._name = name
-        self._embed_scale = d_model ** .5
+        self._embed_scale = d_model ** .5 if embed_scale else None
+        self._embed_layer_norm = embed_layer_norm
         self._max_pos = max_pos
         self._share_layers = share_layers
 
         self._special_tokens = None
-        self._embed, self._pos_embed, self._embed_dropout = None, None, None
+        self._embed, self._embed_norm, self._pos_embed, self._embed_dropout = None, None, None, None
         self._layer, self._layers = None, None
         self._norm = None
         self._out_proj = None
@@ -89,6 +91,7 @@ class TransformerDecoder(AbstractDecoder):
                                                          post_mask=self._position_emb_post_mask)
         else:
             self._pos_embed = SinusoidalPositionalEmbedding(self._d_model)
+        self._embed_norm = nn.LayerNorm(self._d_model) if self._embed_layer_norm else None
         self._embed_dropout = nn.Dropout(self._dropout)
         if self._share_layers:
             self._layer = TransformerDecoderLayer(d_model=self._d_model,
@@ -133,11 +136,13 @@ class TransformerDecoder(AbstractDecoder):
               :math:`(N, L, V)` where N is the batch size, L is the target sequence length,
               V is the vocabulary size.
         """
-
-        x = self._embed(tgt) * self._embed_scale
-
+        x = self._embed(tgt)
+        if self._embed_scale is not None:
+            x = x * self._embed_scale
         if self._pos_embed is not None:
             x = x + self._pos_embed(tgt)
+        if self._embed_norm is not None:
+            x = self._embed_norm(x)
         x = self._embed_dropout(x)
 
         x = x.transpose(0, 1)

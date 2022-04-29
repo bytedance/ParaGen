@@ -9,7 +9,7 @@ from paragen.metrics import create_metric
 from paragen.utils.ops import auto_map_args
 from paragen.utils.runtime import progress_bar, Environment
 from paragen.utils.io import UniIO, exists, mkdir, remove_tree
-from paragen.utils.tensor import to_device, possible_autocast
+from paragen.utils.tensor import to_device, possible_autocast, split_samples
 
 
 @register_evaluator
@@ -20,6 +20,7 @@ class Evaluator(AbstractEvaluator):
     Args:
         metric (dict): metric configuration for building evaluator
         display_samples (int): the number of samples with hypothesis and references to display
+        no_display_option (str): option ['source', 'reference'], default None. Do not display source or reference of a sample
         save_hypo_dir (str): directory path to store hypothesis. All the hypothesis of each dataloader will be saved
             under `save_hypo_dir`
     """
@@ -27,12 +28,14 @@ class Evaluator(AbstractEvaluator):
     def __init__(self,
                  metric: Dict = None,
                  display_samples: int = 5,
+                 no_display_option: str = None,
                  save_hypo_dir: str = None,
                  ):
         super().__init__()
         self._display_samples = display_samples
         self._save_hypo_dir = save_hypo_dir
         self._metric_configs = metric
+        self._no_display_option = no_display_option.lower().split(',') if no_display_option is not None else []
 
         self._generator, self._dataloaders, self._tokenizer, self._task_callback = None, None, None, None
         self._metric, self._postprocess = None, None
@@ -116,18 +119,28 @@ class Evaluator(AbstractEvaluator):
             data_name: dataloader.reset()
             for data_name, dataloader in self._dataloaders.items()
         }
+        metric_names = set()
         for data_name, dataloader in self._dataloaders.items():
             logger.info(f'eval on {data_name} dataset')
             self._eval_reset()
             self.eval_one_dataset(dataloader,
-                                  out_path='{}/{}.hypo'.format(self._save_hypo_dir,
-                                                               data_name) if self._save_hypo_dir else None)
+                                  out_path=f'{self._save_hypo_dir}/{data_name}.hypo' if self._save_hypo_dir else None)
             self._eval_update()
+            metric_logging = []
             for metric_name, metric in self._metric.items():
-                states[f'{data_name}.{metric_name}'] = metric.eval()
-            logger.info(' | '.join(['{}: {}'.format(name, metric.eval())
-                                    for name, metric in self._metric.items()]))
-        for metric_name in self._metric.keys():
+                scores = metric.eval()
+                if isinstance(scores, float):
+                    states[f'{data_name}.{metric_name}'] = scores
+                    metric_names.add(metric_name)
+                    metric_logging.append((f'{data_name}.{metric_name}', scores))
+                elif isinstance(scores, Dict):
+                    for k, v in scores.items():
+                        states[f'{data_name}.{metric_name}-{k}'] = v
+                        metric_names.add(f'{metric_name}-{k}')
+                        metric_logging.append((f'{data_name}.{metric_name}-{k}', v))
+            if len(metric_logging) > 0:
+                logger.info(' | '.join([f'{name}: {scores}' for name, scores in metric_logging]))
+        for metric_name in metric_names:
             if len(self._dataloaders) > 0:
                 tot, cnt = 0, 0
                 for data_name in self._dataloaders.keys():
@@ -154,31 +167,39 @@ class Evaluator(AbstractEvaluator):
         """
         input_list, hypo_list, ref_list = [], [], []
         for samples in progress_bar(dataloader):
-            self._step_reset()
-            with torch.no_grad():
-                self._generator.reset(mode='infer')
-                samples = to_device(samples, self._env.device)
-                if isinstance(samples['net_input'], Dict):
-                    samples['net_input'] = auto_map_args(samples['net_input'], self._generator.input_slots)
-                with possible_autocast():
-                    hypos = self._generator(*samples['net_input'])
+            samples = [samples]
+            while len(samples) > 0:
+                s = samples.pop(0)
+                try:
+                    hypos = self._step(s)
+                    hypos = self._postprocess(hypos, s)
+                    input_list, hypo_list, ref_list = self._step_update(input_list,
+                                                                        hypo_list,
+                                                                        ref_list,
+                                                                        s['text_input'] if 'text_input' in s else [None for _ in hypos],
+                                                                        hypos,
+                                                                        s['text_output'] if 'text_output' in s else [None for _ in hypos])
+                except RuntimeError as e:
+                    error_info = str(e)
+                    error_info = error_info.split('\n')[0]
+                    logger.warning(error_info)
+                    oom = 'out of memory' in error_info
+                    if not oom:
+                        raise e
+                    if oom and self._env.device == 'cuda':
+                        torch.cuda.empty_cache()
+                        s1, s2 = split_samples(s)
+                        samples.extend([s1, s2])
 
-            hypos = self._postprocess(hypos, samples)
-            input_list, hypo_list, ref_list = self._step_update(input_list,
-                                                                hypo_list,
-                                                                ref_list,
-                                                                samples['text_input'] if 'text_input' in samples else [None for _ in hypos],
-                                                                hypos,
-                                                                samples['text_output'] if 'text_output' in samples else [None for _ in hypos])
         info = ''
         for idx in self._random_indices:
             idx = idx % len(hypo_list)
             info += '\n'
-            if input_list[idx] is not None:
-                info += f'\tInput: {input_list[idx]}\n'
+            if 'source' not in self._no_display_option and input_list[idx] is not None:
+                info += f'\tSource: {input_list[idx]}\n'
             info += f'\tHypothesis: {hypo_list[idx]}\n'
-            if ref_list[idx] is not None:
-                info += f'\tGround Truth: {ref_list[idx]}\n'
+            if 'reference' not in self._no_display_option and ref_list[idx] is not None:
+                info += f'\tReference: {ref_list[idx]}\n'
         logger.info(info)
         if self._env.is_master() and out_path:
             with UniIO(out_path, 'w') as fout:
@@ -188,4 +209,14 @@ class Evaluator(AbstractEvaluator):
             for metric in self._metric.values():
                 metric.add_all(hypo_list, ref_list)
 
+    def _step(self, samples):
+        self._step_reset()
+        with torch.no_grad():
+            self._generator.reset(mode='infer')
+            samples = to_device(samples, self._env.device)
+            if isinstance(samples['net_input'], Dict):
+                samples['net_input'] = auto_map_args(samples['net_input'], self._generator.input_slots)
+            with possible_autocast():
+                hypos = self._generator(*samples['net_input'])
+        return hypos
 

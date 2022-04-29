@@ -47,8 +47,21 @@ def build_optimizer(model, configs, enable_apex=False):
         cls = registry[name.lower()]
     else:
         import importlib
-        mod = importlib.import_module('torch.optim')
-        cls = getattr(mod, name)
+        cls = None
+        if name.startswith('Torch'):
+            available_optimizer_lib, name = ['torch.optim'], name[5:]
+        elif name.startswith('Huggingface'):
+            available_optimizer_lib, name = ['transformers'], name[11:]
+        else:
+            available_optimizer_lib = ['torch.optim', 'transformers']
+        for module in available_optimizer_lib:
+            try:
+                mod = importlib.import_module(module)
+                cls = getattr(mod, name)
+            except AttributeError as e:
+                pass
+            if cls is not None:
+                break
 
     def get_grouped_parameters(model):
         if 'no_decay' in configs:

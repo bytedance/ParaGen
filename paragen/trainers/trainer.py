@@ -71,7 +71,7 @@ class Trainer(AbstractTrainer):
                  reset_optimizer=False,
                  reset_trainer=False,
                  no_best_avg=True,
-                 enable_apex=False
+                 enable_apex=False,
                  ):
         super().__init__(max_epochs=max_epochs,
                          max_steps=max_steps,
@@ -180,7 +180,9 @@ class Trainer(AbstractTrainer):
         else:
             mkdir(self._tensorboard_dir)
 
-        if self._env.is_master() and (self._restore_path is not None or self._model.is_pretrained()):
+        if self._env.is_master() \
+            and (self._restore_path is not None or self._model.is_pretrained()) \
+            and (self._start_validate_epoch == 0 and self._start_validate_step == 0):
             self._eval()
 
         if self._env.distributed_world > 1:
@@ -191,6 +193,7 @@ class Trainer(AbstractTrainer):
         Training process
         """
         self.set_mode('train')
+        self._tot_step_cnt += 1
         self._epoch_cnt += 1
         while True:
             with self._epoch_context():
@@ -230,8 +233,6 @@ class Trainer(AbstractTrainer):
 
         yield
 
-        self._epoch_cnt += 1
-
         if self._save_epochs and self._epoch_cnt % self._save_epochs == 0:
             if self._env.is_master():
                 if self._save_model_dir:
@@ -252,6 +253,8 @@ class Trainer(AbstractTrainer):
                     self._update_tensorboard('eval', eval_states)
             if self._env.distributed_world > 1:
                 self._env.join()
+
+        self._epoch_cnt += 1
 
     def _safe_step(self, samples):
         """
@@ -368,14 +371,6 @@ class Trainer(AbstractTrainer):
             self._token_count += real_ntokens
             self._current_logging_states['ntokens'] = real_ntokens
 
-        self._step_cnt += 1
-        self._tot_step_cnt += 1
-
-        self._dataloader.step_update(self._tot_step_cnt)
-        self._criterion.step_update(self._tot_step_cnt)
-        # lazy update for saving computation
-        self._optimizer.step_update(self._tot_step_cnt)
-
         # update logging on tqdm
         self._update_logging()
         if self._env.is_master() and self._tensorboard_dir:
@@ -407,6 +402,14 @@ class Trainer(AbstractTrainer):
                     self._update_tensorboard('eval', eval_states)
             if self._env.distributed_world > 1:
                 self._env.join()
+
+        self._step_cnt += 1
+        self._tot_step_cnt += 1
+
+        self._dataloader.step_update(self._tot_step_cnt)
+        self._criterion.step_update(self._tot_step_cnt)
+        # lazy update for saving computation
+        self._optimizer.step_update(self._tot_step_cnt)
 
     def _update_logging(self):
         """
@@ -542,7 +545,8 @@ class Trainer(AbstractTrainer):
         assert self._env.is_master(), "only master process is allowed to save models"
         name_step = f'updates-{self._tot_step_cnt}.epochs-{self._epoch_cnt}'
         name_metric = '.'.join(
-            [('{}-{:.4f}' if isinstance(v, float) else '{}-{}').format(k, v) for k, v in kwargs.items()])
+            [('{}-{:.4f}' if isinstance(v, float) else '{}-{}').format(k, v)
+             for k, v in kwargs.items() if self._assess_by in k])
         name = f'{name_step}.{name_metric}'
 
         state_dict = self.state_dict()

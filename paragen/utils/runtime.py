@@ -77,10 +77,7 @@ class Environment:
         self.rank = 0
         self.local_rank = local_rank
         if device is None:
-            if torch.cuda.is_available():
-                self.device = 'cuda'
-            else:
-                self.device = 'cpu'
+            self.device = 'cpu'
         else:
             self.device = device
         if self.device == 'cuda':

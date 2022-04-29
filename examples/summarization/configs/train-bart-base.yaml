@@ -1,0 +1,50 @@
+task:
+  class: HugginfaceSeq2SeqTask
+  mode: train
+  src: src
+  tgt: tgt
+  maxlen: (1024,300)
+  preprocessed: True
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/bart-base
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 32
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: JsonDataset
+      path: data/train.index.json
+    valid:
+      class: JsonDataset
+      sort_samples: True
+      path: data/val.index.json
+  model:
+    class: HuggingfaceBartModel
+    pretrained_model: facebook/bart-base
+  criterion:
+      class: CrossEntropy
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr: 5e-5
+      eps: 1e-8
+      clip_norm: 0.
+      update_frequency: 2
+    max_steps: 10000
+    save_steps: 1000
+    assess_by: valid.criterion
+    save_model_dir: checkpoints
+env:
+  device: cuda
+  no_warning: True
+

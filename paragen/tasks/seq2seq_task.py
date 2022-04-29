@@ -1,8 +1,6 @@
 from typing import Dict, List
 import json
 
-from torch import Tensor
-
 from paragen.criteria import create_criterion
 from paragen.generators import create_generator
 from paragen.models import create_model
@@ -27,18 +25,20 @@ class Seq2SeqTask(BaseTask):
     """
 
     def __init__(self,
-                 src,
-                 tgt,
+                 src='src',
+                 tgt='tgt',
                  lang='zh',
-                 maxlen=512,
+                 maxlen=(256, 256),
                  share_vocab=False,
                  index_only=False,
+                 *args,
+                 **kwargs
                  ):
-        super().__init__()
+        super().__init__(*args, **kwargs)
         self._src, self._tgt = src, tgt
         self._lang = lang
         self._share_vocab = share_vocab
-        self._maxlen = maxlen
+        self._maxlen_src, self._maxlen_tgt = maxlen
         self._index_only = index_only
 
     def _build_models(self):
@@ -48,8 +48,8 @@ class Seq2SeqTask(BaseTask):
         self._model = create_model(self._model_configs)
         self._model.build(src_vocab_size=len(self._tokenizer),
                           tgt_vocab_size=len(self._tokenizer),
-                          src_padding_idx=self._tokenizer.pad,
-                          tgt_padding_idx=self._tokenizer.pad)
+                          src_special_tokens=self._tokenizer.special_tokens,
+                          tgt_special_tokens=self._tokenizer.special_tokens)
 
     def _build_criterions(self):
         """
@@ -64,35 +64,27 @@ class Seq2SeqTask(BaseTask):
         """
         self._generator = create_generator(self._generator_configs)
         self._generator.build(self._model,
-                              bos=self._tokenizer.bos,
-                              eos=self._tokenizer.eos,
-                              pad=self._tokenizer.pad)
+                              src_special_tokens=self._tokenizer.special_tokens,
+                              tgt_special_tokens=self._tokenizer.special_tokens)
 
-    def _collate_fn_static(self, sample: Dict, is_training=False) -> Dict:
+    def _data_collate_fn(self, sample: Dict, is_training=False) -> Dict:
         processed_sample = {}
         for key, val in sample.items():
             processed_sample[key] = self._tokenizer.encode(
                 val) if not self._index_only else self._tokenizer.token2index(val)
+
+        if not is_training:
+            processed_sample = self._fill_text_data(processed_sample, sample)
+
+        ntokens = len(processed_sample[self._src])
+        if self._tgt in processed_sample:
+            ntokens = max(ntokens, len(processed_sample[self._tgt]))
+
         return {
             'text': sample,
-            'token_num': count_sample_token(processed_sample[self._src]),
-            'index': processed_sample
+            'token_num': ntokens,
+            'processed': processed_sample
         }
-
-    def _collate_fn_dynamic(self, sample: Dict) -> Dict:
-        """
-        Process a sample statically, such as tokenization
-
-        Args:
-            sample: a sample
-
-        Returns:
-            sample: a processed sample
-        """
-        textual_sample, processed_sample = sample['text'], {k: v for k, v in sample['index'].items()}
-        if self._infering:
-            processed_sample = self._fill_text_data(processed_sample, textual_sample)
-        return processed_sample
 
     def _fill_text_data(self, processed_sample, textual_sample):
         """
@@ -115,7 +107,7 @@ class Seq2SeqTask(BaseTask):
             processed_sample['text_output'] = textual_sample[self._tgt]
         return processed_sample
 
-    def _batch(self, samples: List[Dict]) -> Dict[str, List[Tensor]]:
+    def _collate(self, samples: List[Dict]):
         """
         Create batch from a set of processed samples
 
@@ -125,19 +117,18 @@ class Seq2SeqTask(BaseTask):
         Returns:
             batch: a processed batch of samples used as neural network inputs
         """
+        samples = [sample['processed'] for sample in samples]
         batch_size = len(samples)
         samples = reorganize(samples)
         src = [v + [self._tokenizer.eos] for v in samples[self._src]]
-        if self._training:
-            src = [v[:self._maxlen] for v in src]
+        src = [v[:self._maxlen_src] for v in src]
         src = convert_idx_to_tensor(src, pad=self._tokenizer.pad)
         if not self._infering:
             tgt, prev_tokens = split_tgt_sequence(samples[self._tgt],
                                                   bos=self._tokenizer.bos,
                                                   eos=self._tokenizer.eos)
-            if self._training:
-                prev_tokens = [v[:self._maxlen] for v in prev_tokens]
-                tgt = [v[:self._maxlen] for v in tgt]
+            prev_tokens = [v[:self._maxlen_tgt] for v in prev_tokens]
+            tgt = [v[:self._maxlen_tgt] for v in tgt]
             tgt = convert_idx_to_tensor(tgt, pad=self._tokenizer.pad)
             prev_tokens = convert_idx_to_tensor(prev_tokens, pad=self._tokenizer.pad)
             batch = {
@@ -162,52 +153,16 @@ class Seq2SeqTask(BaseTask):
                 batch['text_output'] = samples['text_output']
         return batch
 
-    def _debatch(self, idx):
+    def _output_collate_fn(self, sample, *args, **kwargs):
         """
         Parse decoded results by convert tensor to list
 
         Returns:
             idx (list): debatched idx
         """
-        idx = convert_tensor_to_idx(idx,
-                                    bos=self._tokenizer.bos,
-                                    eos=self._tokenizer.eos,
-                                    pad=self._tokenizer.pad)
-        return idx
-
-    def _post_collate_fn(self, sample, *args, **kwargs):
-        """
-        Post process a sample
-
-        Args:
-            sample: an outcome
-
-        Returns:
-            sample: a processed sample
-        """
-        sample = self._tokenizer.decode(sample)
+        sample = convert_tensor_to_idx(sample,
+                                       bos=self._tokenizer.bos,
+                                       eos=self._tokenizer.eos,
+                                       pad=self._tokenizer.pad)
+        sample = [self._tokenizer.decode(s) for s in sample]
         return sample
-
-    def export(self, path):
-        """
-        Export model for service
-
-        Args:
-            path: export path
-        """
-        def _fetch_first_sample():
-            """
-            Fetch first sample as input for tracing generator
-
-            Returns:
-                sample: a batch of sample
-            """
-            for dataloader in self._eval_dataloaders.values():
-                for sample in dataloader:
-                    return sample['net_input']
-        self._infering = True
-        self._generator.export(path,
-                               _fetch_first_sample(),
-                               bos=self._tokenizer.bos,
-                               eos=self._tokenizer.eos)
-

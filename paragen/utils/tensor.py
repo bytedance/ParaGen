@@ -153,7 +153,7 @@ def convert_tensor_to_idx(tensor: Tensor, bos: int = None, eos: int = None, pad:
         - a nd list of indices
     """
     idx = tensor.tolist()
-    if bos and eos and pad:
+    if bos is not None and eos is not None and pad is not None:
         idx = remove_special_tokens(idx, bos, eos, pad)
     return idx
 
@@ -172,13 +172,7 @@ def remove_special_tokens(idx, bos: int, eos: int, pad: int):
         - index list without special tokens
     """
     if isinstance(idx, list) and isinstance(idx[0], int):
-        if idx[0] == bos:
-            idx = idx[1:]
-        eos_pos = find_eos(idx, eos)
-        if eos_pos is not None:
-            idx = idx[:eos_pos]
-        idx = [i for i in idx if i != pad]
-        return idx
+        return [i for i in idx if i not in [bos, eos, pad]]
     else:
         return [remove_special_tokens(i, bos, eos, pad) for i in idx]
 
@@ -250,6 +244,30 @@ def half_samples(samples):
         else:
             dummy = recursive(dummy_tensor)
             return dummy(samples), True
+    else:
+        raise NotImplementedError
+
+
+def split_samples(samples):
+    """
+    Half tensor of the given samples
+
+    Args:
+        samples: samples to half
+
+    Returns:
+        - two halved samples
+    """
+    if isinstance(samples, List):
+        samples = [split_samples(s) for s in samples]
+        samples = list(zip(*samples))
+        return samples[0], samples[1]
+    elif isinstance(samples, Dict):
+        samples = {k: split_samples(v) for k, v in samples.items()}
+        return {k: v[0] for k, v in samples.items()}, {k: v[1] for k, v in samples.items()}
+    elif isinstance(samples, Tensor):
+        idx = samples.shape[0] // 2
+        return samples[:idx], samples[idx:]
     else:
         raise NotImplementedError
 
