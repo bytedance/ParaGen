@@ -19,6 +19,7 @@ class HuggingfaceTokenizer(AbstractTokenizer):
 
     def __init__(self, tokenizer_name, *args, **kwargs):
         super().__init__()
+        self._tokenizer_name = tokenizer_name
         self._tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, *args, **kwargs)
 
     @staticmethod
@@ -62,19 +63,19 @@ class HuggingfaceTokenizer(AbstractTokenizer):
 
     @property
     def bos(self):
-        return self._tokenizer.bos_token_id
+        return self._tokenizer.bos_token_id if self._tokenizer.bos_token_id is not None else len(self) - 3
 
     @property
     def eos(self):
-        return self._tokenizer.eos_token_id
+        return self._tokenizer.eos_token_id if self._tokenizer.eos_token_id is not None else len(self) - 4
 
     @property
     def unk(self):
-        return self._tokenizer.unk_token_id
+        return self._tokenizer.unk_token_id if self._tokenizer.unk_token_id is not None else len(self) - 2
 
     @property
     def pad(self):
-        return self._tokenizer.pad_token_id
+        return self._tokenizer.pad_token_id if self._tokenizer.pad_token_id is not None else len(self) - 1
 
     @property
     def bos_token(self):
