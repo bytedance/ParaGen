@@ -11,11 +11,11 @@ dataset:
   class: JsonDataset
 data:
   train:
-    path: train.jsonl
+    path: data/train.jsonl
     output_path: data/train.index.json
   valid:
-    path: val.jsonl
+    path: data/val.jsonl
     output_path: data/val.index.json
   test:
-    path: test.jsonl
+    path: data/test.jsonl
     output_path: data/test.index.json
