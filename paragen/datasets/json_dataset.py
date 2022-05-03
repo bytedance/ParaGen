@@ -6,7 +6,7 @@ from paragen.datasets import register_dataset
 from paragen.datasets.in_memory_dataset import InMemoryDataset
 from paragen.utils.data import count_sample_token
 from paragen.utils.io import UniIO
-from paragen.utils.runtime import progress_bar
+from paragen.utils.runtime import progress_bar, Environment
 
 
 @register_dataset
@@ -41,7 +41,10 @@ class JsonDataset(InMemoryDataset):
                 sample = sample.strip('\n')
                 self._data.append(self._full_callback(sample))
                 accecpted += 1
-            except Exception:
+            except Exception as e:
+                env = Environment()
+                if env.debug:
+                    raise e
                 logger.warning('sample {} is discarded'.format(sample))
                 discarded += 1
         if self._sort_samples:
