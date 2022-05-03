@@ -50,12 +50,12 @@ task:
         class: PolynomialDecayScheduler
         max_rate: 5e-5
         warmup_steps: 500
-        total_steps: 50000
+        total_steps: 10000
       clip_norm: 0.
       weight_decay: 0.01
       eps: 1e-8
-    max_steps: 50000
-    save_steps: 5000
+    max_steps: 10000
+    save_steps: 2000
     assess_by: valid.criterion
     save_model_dir: checkpoints
   generator:
