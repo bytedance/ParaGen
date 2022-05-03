@@ -69,7 +69,8 @@ class Seq2SeqTask(BaseTask):
 
     def _data_collate_fn(self, sample: Dict, is_training=False) -> Dict:
         processed_sample = {}
-        for key, val in sample.items():
+        for key in [self._src, self._tgt]:
+            val = sample[key]
             processed_sample[key] = self._tokenizer.encode(
                 val) if not self._index_only else self._tokenizer.token2index(val)
 
