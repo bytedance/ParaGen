@@ -100,10 +100,8 @@ def eval(hypo, ref, tmp_dir='.tmp_pyrouge'):
 
     r = Rouge155()
     r.log.setLevel(logging.WARN)
-    r.model_dir = hypo_dir
-    r.system_dir = ref_dir
-    r.model_filename_pattern = 'hypo.#ID#.txt'
-    r.system_filename_pattern = r'ref.(\d+).txt'
+    r.model_dir, r.system_dir = ref_dir, hypo_dir
+    r.model_filename_pattern, r.system_filename_pattern = r'ref.(\d+).txt', 'hypo.#ID#.txt'
     rouge_results = r.convert_and_evaluate()
 
     results_dict = r.output_to_dict(rouge_results)
