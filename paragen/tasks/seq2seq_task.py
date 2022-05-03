@@ -149,7 +149,9 @@ class Seq2SeqTask(BaseTask):
                 'encoder': (src, ),
                 'decoder': (prev_tokens, ),
             }
-            batch = {'net_input': net_input, 'text_input': samples['text_input']}
+            batch = {'net_input': net_input}
+            if 'text_input' in samples:
+                batch['text_input'] = samples['text_input']
             if 'text_output' in samples:
                 batch['text_output'] = samples['text_output']
         return batch
