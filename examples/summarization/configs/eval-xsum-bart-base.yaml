@@ -15,9 +15,6 @@ task:
         class: SequentialSampler
         max_samples: 128
   data:
-    valid:
-      class: JsonDataset
-      path: data/val.index.json
     test:
       class: JsonDataset
       path: data/test.index.json
