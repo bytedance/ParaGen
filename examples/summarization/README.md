@@ -5,6 +5,7 @@ We benchmark summarization task on Multi-News dataset with pretrained BART-base 
 | Task | rouge-1 | rouge-2 | rouge-l | 
 | --- | --- | --- | --- |
 | Multi-News | 46.80 | 17.93 | 43.01 |
+| XSum | 42.49 | 19.52 | 34.37 |
 
 ## Dependency
 
