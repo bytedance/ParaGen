@@ -6,9 +6,12 @@ By default, the presented results are derived via model selection on validation 
 | Task | sacrebleu | tok bleu | 
 | --- | --- | --- |
 | IWSLT14 De-En | 33.1 | 34.5 |
+| WMT14 En-De (base) | 26.9 | 27.5 |
 | WMT14 En-De (big) | 27.7 | 28.4 |
 | WMT14 En-Fr (big) | 38.8 | 41.7 |
 | WMT14 En-Fr (big) (last10) | 40.3 | 43.3 |
+
+To obtain `sacrebleu`, set `--task.post_detok True --task.evaluator.metric.bleu.no_tok False`.
 
 ## Training a new model
 
