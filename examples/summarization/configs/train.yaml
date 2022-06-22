@@ -28,25 +28,8 @@ task:
       sort_samples: True
       path: data/val.index.json
   model:
-    class: Seq2Seq
-    encoder:
-      class: TransformerEncoder
-      num_layers: 6
-      d_model: 512
-      n_head: 8
-      dim_feedforward: 2048
-      dropout: 0.1
-      activation: 'relu'
-    decoder:
-      class: TransformerDecoder
-      num_layers: 6
-      d_model: 512
-      n_head: 8
-      dim_feedforward: 2048
-      dropout: 0.1
-      activation: 'relu'
-    share_embedding: decoder-input-output
-    d_model: 512
+    class: HuggingfaceBartModel
+    arch: facebook/bart-base
   criterion:
       class: CrossEntropy
   trainer:

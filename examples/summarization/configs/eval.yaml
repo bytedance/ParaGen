@@ -22,34 +22,16 @@ task:
       class: JsonDataset
       path: data/test.index.json
   model:
-    class: Seq2Seq
-    encoder:
-      class: TransformerEncoder
-      num_layers: 6
-      d_model: 512
-      n_head: 8
-      dim_feedforward: 2048
-      dropout: 0.1
-      activation: 'relu'
-    decoder:
-      class: TransformerDecoder
-      num_layers: 6
-      d_model: 512
-      n_head: 8
-      dim_feedforward: 2048
-      dropout: 0.1
-      activation: 'relu'
-    share_embedding: decoder-input-output
-    d_model: 512
-    path: checkpoints_best.pt
+    class: HuggingfaceBartModel
+    arch: facebook/bart-base
   generator:
-    class: SequenceGenerator
-    search:
-      class: BeamSearch
-      maxlen: 200
-      minlen: 100
-      beam: 5
-      lenpen: 2.0
+    class: SelfContainedGenerator
+    num_beams: 5
+    max_length: 400
+    min_length: 200
+    no_repeat_ngram_size: 4
+    length_penalty: 2.0
+    early_stopping: True
   evaluator:
     class: Evaluator
     metric:

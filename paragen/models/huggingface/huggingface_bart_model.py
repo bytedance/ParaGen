@@ -2,7 +2,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import torch
-from transformers import BartForConditionalGeneration
+from transformers import BartConfig, BartForConditionalGeneration
 
 from paragen.models import register_model
 from paragen.models.abstract_encoder_decoder_model import AbstractEncoderDecoderModel
@@ -20,9 +20,21 @@ class HuggingfaceBartModel(AbstractEncoderDecoderModel):
         path: path to restore model
     """
 
-    def __init__(self, pretrained_model, path=None):
+    def __init__(
+        self,
+        arch=None,
+        pretrained_model=None,
+        path=None
+    ):
         super().__init__(path=path)
+        self._arch = arch
         self._pretrained_model = pretrained_model
+        if self._pretrained_model is not None:
+            if self._arch is None:
+                self._arch = self._pretrained_model
+            else:
+                assert self._arch == self._pretrained_model
+        assert self._arch is not None
 
         self._config = None
         self._model = None
@@ -36,10 +48,19 @@ class HuggingfaceBartModel(AbstractEncoderDecoderModel):
             vocab_size: vocabulary size of input sequence
             special_tokens: special tokens of input sequence
         """
+        assert self._pretrained_model is not None or \
+               (src_vocab_size is not None and src_special_tokens is not None and tgt_vocab_size is not None and tgt_special_tokens is not None)
         assert src_vocab_size == tgt_vocab_size
         assert src_special_tokens == tgt_special_tokens
         assert src_special_tokens['bos'] == 0
-        self._model = BartForConditionalGeneration.from_pretrained(self._pretrained_model, forced_bos_token_id=0)
+
+        self._config = BartConfig.from_pretrained(self._arch)
+        if self._pretrained_model is not None:
+            self._model = BartForConditionalGeneration.from_pretrained(self._pretrained_model, forced_bos_token_id=0)
+        else:
+            self._config.vocab_size = src_vocab_size
+            self._config.pad_token_id, self._config.bos_token_id, self._config.eos_token_id = src_special_tokens['pad'], src_special_tokens['bos'], src_special_tokens['eos']
+            self._model = BartForConditionalGeneration(self._config)
         self._special_tokens = src_special_tokens
 
     def load(self, path, device, strict=False):
