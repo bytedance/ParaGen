@@ -28,11 +28,11 @@ paragen-preprocess --config configs/preprocess.yaml
 #### Train BART-base model
 Then we train bart-base model on preprocessed data
 ```bash
-paragen-run --config configs/train-bart-base.yaml --task.model.path {MODEL_PATH}
+paragen-run --config configs/train-bart-base.yaml
 ```
 
 #### Evaluate model
 After obtained our model, we evaluate the model by
 ```bash
-paragen-run --config configs/eval-bart-base.yaml --lib summ
+paragen-run --config configs/eval-bart-base.yaml --lib summ --task.model.path {MODEL_PATH}
 ```
