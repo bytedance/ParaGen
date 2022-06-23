@@ -36,7 +36,7 @@ task:
     class: Trainer
     optimizer:
       class: AdamW
-      lr: 5e-4
+      lr: 1e-4
       eps: 1e-8
       clip_norm: 0.
       update_frequency: 2
