@@ -1,6 +1,6 @@
 # Summarization
 
-We benchmark summarization task on Multi-News dataset with pretrained BART-base from Hugginface.
+We benchmark summarization task on Multi-News dataset with pretrained BART-base from Huggingface.
 
 | Task | rouge-1 | rouge-2 | rouge-l | 
 | --- | --- | --- | --- |

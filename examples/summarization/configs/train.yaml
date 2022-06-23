@@ -36,11 +36,11 @@ task:
     class: Trainer
     optimizer:
       class: AdamW
-      lr: 5e-5
+      lr: 5e-4
       eps: 1e-8
       clip_norm: 0.
       update_frequency: 2
-    max_steps: 10000
+    max_steps: 50000
     save_steps: 1000
     assess_by: valid.criterion
     save_model_dir: checkpoints
