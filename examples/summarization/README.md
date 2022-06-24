@@ -8,6 +8,7 @@ We benchmark summarization task on Multi-News and XSum datasets.
 | Multi-News | bart-base | 46.80 | 17.93 | 43.01 |
 | XSum | bart-base | 42.49 | 19.52 | 34.37 |
 
+
 ## Dependency
 
 To reproduce the summarization results, `pyrouge` is required:
