@@ -43,6 +43,7 @@ task:
     max_steps: 10000
     save_steps: 1000
     assess_by: valid.criterion
+    assess_reverse: True
     save_model_dir: checkpoints
 env:
   device: cuda
