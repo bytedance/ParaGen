@@ -23,17 +23,20 @@ class HuggingfaceBartModel(AbstractEncoderDecoderModel):
     def __init__(
         self,
         arch=None,
+        max_position=None,
         pretrained_model=None,
         path=None
     ):
         super().__init__(path=path)
         self._arch = arch
+        self._max_position = max_position
         self._pretrained_model = pretrained_model
         if self._pretrained_model is not None:
             if self._arch is None:
                 self._arch = self._pretrained_model
             else:
                 assert self._arch == self._pretrained_model
+            assert max_position is None
         assert self._arch is not None
 
         self._config = None
@@ -60,6 +63,8 @@ class HuggingfaceBartModel(AbstractEncoderDecoderModel):
         else:
             self._config.vocab_size = src_vocab_size
             self._config.pad_token_id, self._config.bos_token_id, self._config.eos_token_id = src_special_tokens['pad'], src_special_tokens['bos'], src_special_tokens['eos']
+            if self._max_position is not None:
+                self._config.max_position_embeddings = self._max_position
             self._model = BartForConditionalGeneration(self._config)
         self._special_tokens = src_special_tokens
 
