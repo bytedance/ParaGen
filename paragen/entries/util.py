@@ -64,4 +64,4 @@ def stringizing(conf: dict):
         definition = {"${" + k + "}": v for k,v in conf['define'].items()}
         conf.pop("define")
         _stringizing(definition, conf)
-~                                           
+
