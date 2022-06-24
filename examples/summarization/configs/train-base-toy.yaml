@@ -1,0 +1,99 @@
+task:
+  class: Seq2SeqTask
+  mode: train
+  src: src
+  tgt: tgt
+  maxlen: (1024,400)
+  preprocessed: True
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/bart-base
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 64
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 64
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 64
+  data:
+    train:
+      class: JsonDataset
+      path: data/train.index.json
+    valid:
+      class: JsonDataset
+      sort_samples: True
+      path: data/val.index.json
+    test:
+      class: JsonDataset
+      sort_samples: True
+      path: data/test.index.json
+  model:
+    class: Seq2Seq
+    encoder:
+      class: TransformerEncoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.3
+      activation: 'gelu'
+      learn_pos: True
+      embed_scale: False
+      embed_layer_norm: True
+    decoder:
+      class: TransformerDecoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.3
+      activation: 'gelu'
+      learn_pos: True
+      embed_scale: False
+      embed_layer_norm: True
+    share_embedding: all
+    d_model: 512
+  criterion:
+    class: LabelSmoothedCrossEntropy
+    epsilon: 0.1
+  trainer:
+    class: Trainer
+    optimizer:
+      class: Adafactor
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 1e-3
+        warmup_steps: 500
+        total_steps: 50000
+      relative_step: False
+      scale_parameter: False
+      warmup_init: False
+    max_steps: 50000
+    validate_interval_step: 10000
+    assess_by: valid.rouge-1
+    save_model_dir: checkpoints
+  generator:
+    class: SequenceGenerator
+    search:
+      class: GreedySearch
+      maxlen_coef: (0, 400)
+  evaluator:
+    class: Evaluator
+    metric:
+      rouge:
+        class: Rouge
+        ngram: 1,2,l
+env:
+  device: cuda
+  fp16: True
+  no_warning: True
+  no_progress_bar: True

@@ -63,6 +63,7 @@ class HuggingfaceBartModel(AbstractEncoderDecoderModel):
             self._model = BartForConditionalGeneration(self._config)
         self._special_tokens = src_special_tokens
 
+
     def load(self, path, device, strict=False):
         """
         Load model from path and move model to device.
@@ -101,4 +102,3 @@ class HuggingfaceBartModel(AbstractEncoderDecoderModel):
 
     def generate(self, *args, **kwargs):
         return self._model.generate(*args, **kwargs)
-

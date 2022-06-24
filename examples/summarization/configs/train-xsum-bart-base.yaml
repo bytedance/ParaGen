@@ -77,4 +77,3 @@ env:
   device: cuda
   fp16: True
   no_warning: True
-

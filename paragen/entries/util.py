@@ -59,8 +59,9 @@ def stringizing(conf: dict):
                 conf_dct[k] = v
             if isinstance(v, dict):
                 _stringizing(def_dct, v)
-    
+
     if "define" in conf:
         definition = {"${" + k + "}": v for k,v in conf['define'].items()}
         conf.pop("define")
         _stringizing(definition, conf)
+~                                           
