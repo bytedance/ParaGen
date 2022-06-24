@@ -3,8 +3,8 @@
 We benchmark summarization task on Multi-News and XSum datasets.
 
 | Task | Model | rouge-1 | rouge-2 | rouge-l | 
-| --- | --- | --- | --- | --- |
-| Multi-News | bart-base w/o pretrain | 37.99 | 7.97 | 34.33 |
+| --- | --- | -- | --- | --- |
+| Multi-News | bart-base w/o pretrain | 38.43 | 8.53 | 35.02 |
 | Multi-News | bart-base | 46.80 | 17.93 | 43.01 |
 | XSum | bart-base | 42.49 | 19.52 | 34.37 |
 
