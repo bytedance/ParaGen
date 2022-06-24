@@ -47,4 +47,3 @@ task:
 env:
   device: cuda
   no_warning: True
-
