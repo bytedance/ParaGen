@@ -1,10 +1,12 @@
 # Summarization
 
-We benchmark summarization task on Multi-News dataset with pretrained BART-base from Hugginface.
+We benchmark summarization task on Multi-News and XSum datasets.
 
-| Task | rouge-1 | rouge-2 | rouge-l | 
-| --- | --- | --- | --- |
-| Multi-News | 46.80 | 17.93 | 43.01 |
+| Task | Model | rouge-1 | rouge-2 | rouge-l | 
+| --- | --- | -- | --- | --- |
+| Multi-News | bart-base w/o pretrain | 38.43 | 8.53 | 35.02 |
+| Multi-News | bart-base | 46.80 | 17.93 | 43.01 |
+| XSum | bart-base | 42.49 | 19.52 | 34.37 |
 
 ## Dependency
 
@@ -27,11 +29,11 @@ paragen-preprocess --config configs/preprocess.yaml
 #### Train BART-base model
 Then we train bart-base model on preprocessed data
 ```bash
-paragen-run --config configs/train-bart-base.yaml --task.model.path {MODEL_PATH}
+paragen-run --config configs/train-bart-base.yaml
 ```
 
 #### Evaluate model
 After obtained our model, we evaluate the model by
 ```bash
-paragen-run --config configs/eval-bart-base.yaml --lib summ
+paragen-run --config configs/eval-bart-base.yaml --lib summ --task.model.path {MODEL_PATH}
 ```

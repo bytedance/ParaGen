@@ -1,0 +1,42 @@
+task:
+  class: HugginfaceSeq2SeqTask
+  mode: evaluate
+  src: source
+  tgt: target
+  maxlen: (464,48)
+  preprocessed: True
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/bart-base
+  dataloader:
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    test:
+      class: JsonDataset
+      path: data/test.index.json
+  model:
+    class: HuggingfaceBartModel
+    pretrained_model: facebook/bart-base
+  generator:
+    class: SelfContainedGenerator
+    num_beams: 5
+    max_length: 80
+    min_length: 0
+    no_repeat_ngram_size: 4
+    length_penalty: 0.8
+    early_stopping: True
+  evaluator:
+    class: Evaluator
+    metric:
+      rouge:
+        class: Rouge
+        ngram: 1,2,l
+        num_threads: 8
+env:
+  device: cuda
+  no_warning: True
+

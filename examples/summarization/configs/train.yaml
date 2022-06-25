@@ -29,21 +29,20 @@ task:
       path: data/val.index.json
   model:
     class: HuggingfaceBartModel
-    pretrained_model: facebook/bart-base
+    arch: facebook/bart-base
   criterion:
       class: CrossEntropy
   trainer:
     class: Trainer
     optimizer:
       class: AdamW
-      lr: 5e-5
+      lr: 1e-4
       eps: 1e-8
       clip_norm: 0.
       update_frequency: 2
-    max_steps: 10000
+    max_steps: 30000
     save_steps: 1000
     save_model_dir: checkpoints
 env:
   device: cuda
   no_warning: True
-

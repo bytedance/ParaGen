@@ -24,10 +24,11 @@ class BeamSearch(SequenceSearch):
         keepdim: bool, squeeze the output sequence if set True
     """
 
-    def __init__(self, beam=4, lenpen=0.1, maxlen_coef=(1.2, 10), maxlen=1000, num_return_sequence=1, keepdim=False):
+    def __init__(self, beam=4, lenpen=0.1, maxlen_coef=(1.2, 10), minlen=100, maxlen=1000, num_return_sequence=1, keepdim=False):
         super().__init__()
         self._beam = beam
         self._lenpen = lenpen
+        self._minlen = minlen
         self._maxlen = maxlen
         self._maxlen_a, self._maxlen_b = maxlen_coef
         self._num_return_sequence = num_return_sequence
@@ -86,10 +87,11 @@ class BeamSearch(SequenceSearch):
         maxlen = min(int(memory_size * self._maxlen_a + self._maxlen_b) - curlen, self._maxlen)
         finished = tokens.data.new(batch_size, 1, maxlen + curlen + 1).fill_(self._eos)
         finished_scores = scores.data.new(batch_size, 1).fill_(float('-inf'))
-        for _ in range(maxlen - 1):
+        for l in range(maxlen - 1):
             tokens, scores = self._produce_candidates(tokens, memory, memory_padding_mask, scores)
             finished_mask = tokens[:, :, -1] == self._eos
-            finished, finished_scores = self._add_finished(finished, finished_scores, tokens, scores, finished_mask)
+            if l > self._minlen:
+                finished, finished_scores = self._add_finished(finished, finished_scores, tokens, scores, finished_mask)
             tokens, scores = self._update_states(tokens, scores, finished_mask)
 
         if not self._keepdim and self._num_return_sequence == 1:

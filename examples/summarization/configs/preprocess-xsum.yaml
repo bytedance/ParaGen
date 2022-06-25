@@ -1,0 +1,21 @@
+task:
+  class: Seq2SeqTask
+  mode: preprocess
+  src: source
+  tgt: target
+  maxlen: (464,48)
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/bart-base
+dataset:
+  class: JsonDataset
+data:
+  train:
+    path: data/train.jsonl
+    output_path: data/train.index.json
+  valid:
+    path: data/val.jsonl
+    output_path: data/val.index.json
+  test:
+    path: data/test.jsonl
+    output_path: data/test.index.json

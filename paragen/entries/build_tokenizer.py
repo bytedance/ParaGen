@@ -11,7 +11,8 @@ def main():
         build_env(configs, **env_conf)
     cls = registry[configs.pop('class').lower()]
     assert issubclass(cls, AbstractTokenizer)
-    os.makedirs('/'.join(configs['output_path'].split('/')[:-1]), exist_ok=True)
+    if '/' in configs['output_path']:
+        os.makedirs('/'.join(configs['output_path'].split('/')[:-1]), exist_ok=True)
     data = configs.pop('data')
     cls.learn(data, **configs)
 

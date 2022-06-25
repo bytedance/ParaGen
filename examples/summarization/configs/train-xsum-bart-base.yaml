@@ -1,0 +1,78 @@
+task:
+  class: HugginfaceSeq2SeqTask
+  mode: train
+  src: source
+  tgt: target
+  maxlen: (464,48)
+  preprocessed: True
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/bart-base
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 64
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: JsonDataset
+      path: data/train.index.json
+    valid:
+      class: JsonDataset
+      sort_samples: True
+      path: data/val.index.json
+    test:
+      class: JsonDataset
+      sort_samples: True
+      path: data/test.index.json
+  model:
+    class: HuggingfaceBartModel
+    pretrained_model: facebook/bart-base
+  criterion:
+      class: LabelSmoothedCrossEntropy
+      epsilon: 0.1
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 5e-5
+        warmup_steps: 500
+        total_steps: 60000
+      clip_norm: 0.
+      weight_decay: 0.01
+      eps: 1e-8
+    max_steps: 60000
+    save_steps: 2000
+    save_model_dir: checkpoints
+  generator:
+    class: SelfContainedGenerator
+    num_beams: 5
+    max_length: 80
+    min_length: 0
+    no_repeat_ngram_size: 4
+    length_penalty: 0.8
+    early_stopping: True
+  evaluator:
+    class: Evaluator
+    metric:
+      rouge:
+        class: Rouge
+        ngram: 1,2,l
+        num_threads: 8
+env:
+  device: cuda
+  fp16: True
+  no_warning: True

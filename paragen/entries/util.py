@@ -43,7 +43,10 @@ def parse_config():
         if 'custom_libs' in confs['env']:
             custom_libs.append(confs['env']['custom_libs'])
         confs['env']['custom_libs'] = ','.join(custom_libs)
-    confs['env']['local_rank'] = args.local_rank
+    if 'env' in confs:
+        confs['env']['local_rank'] = args.local_rank
+    else:
+        confs['env'] = {'local_rank': args.local_rank}
     return confs
 
 def stringizing(conf: dict):
@@ -56,8 +59,9 @@ def stringizing(conf: dict):
                 conf_dct[k] = v
             if isinstance(v, dict):
                 _stringizing(def_dct, v)
-    
+
     if "define" in conf:
         definition = {"${" + k + "}": v for k,v in conf['define'].items()}
         conf.pop("define")
         _stringizing(definition, conf)
+
