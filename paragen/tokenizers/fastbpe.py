@@ -1,7 +1,5 @@
 from typing import List
 
-import fastBPE
-
 from paragen.tokenizers import AbstractTokenizer, register_tokenizer
 from paragen.tokenizers.vocabulary import Vocabulary
 
@@ -36,6 +34,7 @@ class FastBPE(AbstractTokenizer):
 
     def build(self, *args, **kwargs):
         if self._codes is not None:
+            import fastBPE
             self._bpe = fastBPE.fastBPE(self._codes, self._vocab)
         self._vocab = Vocabulary(self._vocab_path,
                                  preserved_tokens=self._preserved_tokens,
