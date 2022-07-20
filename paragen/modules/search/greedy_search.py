@@ -1,4 +1,5 @@
 from typing import Optional
+from sklearn.feature_selection import SelectKBest
 import torch
 
 from paragen.modules.search import register_search
@@ -16,9 +17,14 @@ class GreedySearch(SequenceSearch):
             The max length is computed as `(S * a + b)`, where S is source sequence length.
     """
 
-    def __init__(self, maxlen_coef=(1.2, 10)):
+    def __init__(
+        self, 
+        minlen_coef=(0., 0.),
+        maxlen_coef=(1.2, 10)
+    ):
         super().__init__()
 
+        self._minlen_a, self._minlen_b = minlen_coef
         self._maxlen_a, self._maxlen_b = maxlen_coef
 
     def forward(self,
@@ -47,9 +53,13 @@ class GreedySearch(SequenceSearch):
         """
         batch_size = prev_tokens.size(0)
         scores = create_init_scores(prev_tokens, memory) if prev_scores is None else prev_scores
-        for _ in range(int(memory.size(0) * self._maxlen_a + self._maxlen_b)):
+        minlen = int(memory.size(0) * self._minlen_a + self._minlen_b)
+        maxlen = int(memory.size(0) * self._maxlen_a + self._maxlen_b)
+        for i in range(maxlen):
             logits = self._decoder(prev_tokens, memory, memory_padding_mask)
             logits = logits[:, -1, :]
+            if i < minlen:
+                logits[:, -1, self._eos] = float('-inf')
             if target_mask is not None:
                 logits = logits.masked_fill(target_mask, float('-inf'))
             next_word_scores, words = logits.max(dim=-1)
