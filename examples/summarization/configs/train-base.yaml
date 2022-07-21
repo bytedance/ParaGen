@@ -1,0 +1,77 @@
+task:
+  class: HugginfaceSeq2SeqTask
+  mode: train
+  src: src
+  tgt: tgt
+  maxlen: (1024,300)
+  preprocessed: True
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/bart-base
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 64
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: JsonDataset
+      path: data/train.index.json
+    valid:
+      class: JsonDataset
+      sort_samples: True
+      path: data/val.index.json
+  model:
+    class: Seq2Seq
+    encoder:
+      class: TransformerEncoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'gelu'
+      embed_layer_norm: True
+      learn_pos: True
+      max_pos: 1024
+    decoder:
+      class: TransformerDecoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'gelu'
+      embed_layer_norm: True      
+      learn_pos: True
+      max_pos: 512
+    share_embedding: all
+    d_model: 512
+  criterion:
+    class: LabelSmoothedCrossEntropy
+    epsilon: 0.1
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: InverseSquareRootRateScheduler
+        rate: 5e-4
+        warmup_steps: 1000
+      clip_norm: 0.
+      betas: (0.9, 0.98)
+      eps: 1e-8
+      weight_decay: 1e-2
+    max_steps: 100000
+    save_steps: 10000
+    save_model_dir: ckpts-tr
+env:
+  device: cuda
+  no_warning: True
+

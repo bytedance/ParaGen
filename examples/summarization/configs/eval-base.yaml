@@ -1,0 +1,63 @@
+task:
+  class: Seq2SeqTask
+  mode: evaluate
+  src: src
+  tgt: tgt
+  maxlen: (1024,300)
+  preprocessed: True
+  tokenizer:
+    class: HuggingfaceTokenizer
+    tokenizer_name: facebook/bart-base
+  dataloader:
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    test:
+      class: JsonDataset
+      path: data/test.index.json
+  model:
+    class: Seq2Seq
+    encoder:
+      class: TransformerEncoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'gelu'
+      embed_layer_norm: True
+      learn_pos: True
+      max_pos: 1024
+    decoder:
+      class: TransformerDecoder
+      num_layers: 6
+      d_model: 512
+      n_head: 8
+      dim_feedforward: 2048
+      dropout: 0.1
+      activation: 'gelu'
+      embed_layer_norm: True      
+      learn_pos: True
+      max_pos: 512
+    share_embedding: all
+    d_model: 512
+  generator:
+    class: SequenceGenerator
+    search:
+      class: GreedySearch
+      maxlen_coef: (0,400)
+      minlen_coef: (0,200)
+  evaluator:
+    class: Evaluator
+    metric:
+      rouge:
+        class: Rouge
+        ngram: 1,2,l
+        num_threads: 16
+env:
+  device: cuda
+  no_warning: True
+
