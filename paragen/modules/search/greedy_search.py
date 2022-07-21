@@ -1,5 +1,4 @@
 from typing import Optional
-from sklearn.feature_selection import SelectKBest
 import torch
 
 from paragen.modules.search import register_search
