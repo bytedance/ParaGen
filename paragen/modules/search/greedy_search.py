@@ -59,7 +59,7 @@ class GreedySearch(SequenceSearch):
             logits = self._decoder(prev_tokens, memory, memory_padding_mask)
             logits = logits[:, -1, :]
             if i < minlen:
-                logits[:, -1, self._eos] = float('-inf')
+                logits[:, self._eos] = float('-inf')
             if target_mask is not None:
                 logits = logits.masked_fill(target_mask, float('-inf'))
             next_word_scores, words = logits.max(dim=-1)
