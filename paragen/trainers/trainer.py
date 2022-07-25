@@ -104,7 +104,7 @@ class Trainer(AbstractTrainer):
         self._save_best_avg = []
         self._save_last = []
 
-        self._model, self._dataloader, self._criterion, self._optimizer = None, None, None,  None
+        self._ori_model, self._model, self._dataloader, self._criterion, self._optimizer = None, None, None, None, None
         self._eval_dataloaders, self._evaluator = None, None
         self._task_callback = None
 
@@ -132,17 +132,18 @@ class Trainer(AbstractTrainer):
             evaluator: evaluate model with complete generation process in inference
             task_callback: callback to set task states
         """
-        self._model = model
+        self._ori_model = model
         self._dataloader = dataloader
         self._criterion = criterion
         self._eval_dataloaders = eval_dataloaders
         self._evaluator = evaluator
         self._task_callback = task_callback
 
-        self._model, self._optimizer = build_optimizer(self._model,
+        self._model, self._optimizer = build_optimizer(model,
                                                        self._optimizer_configs,
                                                        enable_apex=self._enable_apex)
         self._update_frequency = self._optimizer.update_frequency
+        self._criterion._model = self._model  # Temporary solution to ddp. Should be fixed in the next version by moving criterion initialization to Trainer.
 
         self._no_progress_bar = self._env.no_progress_bar or self._env.rank > 0
         if self._tensorboard_dir:
@@ -181,7 +182,7 @@ class Trainer(AbstractTrainer):
             mkdir(self._tensorboard_dir)
 
         if self._env.is_master() \
-            and (self._restore_path is not None or self._model.is_pretrained()) \
+            and (self._restore_path is not None or self._ori_model.is_pretrained()) \
             and (self._start_validate_epoch == 0 and self._start_validate_step == 0):
             self._eval()
 
@@ -300,7 +301,7 @@ class Trainer(AbstractTrainer):
         samples = to_device(samples, device=self._env.device)
         logging_states = OrderedDict()
         for i, batch in enumerate(samples):
-            self._model.reset(mode='train')
+            self._ori_model.reset(mode='train')
             with profiler.timeit("forward"):
                 if self._enable_apex:
                     loss, logging_state = self._forward_loss(batch)
@@ -487,7 +488,7 @@ class Trainer(AbstractTrainer):
         with torch.no_grad():
             pb = progress_bar(dataloader)
             for samples in pb:
-                self._model.reset(mode='valid')
+                self._ori_model.reset(mode='valid')
                 samples = to_device(samples, device=self._env.device)
                 with possible_autocast():
                     loss, logging_states = self._forward_loss(samples)
@@ -623,7 +624,7 @@ class Trainer(AbstractTrainer):
         Args:
             mode: trainer mode, ['train', 'valid', 'infer']
         """
-        self._model.reset(mode)
+        self._ori_model.reset(mode)
         self._task_callback(training=(mode == 'train'),
                             infering=(mode == 'infer'))
         if mode == 'train':
