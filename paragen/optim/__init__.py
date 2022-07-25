@@ -95,9 +95,8 @@ def build_optimizer(model, configs, enable_apex=False):
             hvd.broadcast_optimizer_state(optimizer, root_rank=0)
         elif env.distributed == 'ddp':
             from torch.nn.parallel import DistributedDataParallel as DDP
-            grouped_parameters = get_grouped_parameters(
-                DDP(model, device_ids=[env.local_rank], output_device=env.local_rank)
-            )
+            model = DDP(model, device_ids=[env.local_rank], output_device=env.local_rank, find_unused_parameters=True)
+            grouped_parameters = get_grouped_parameters(model)
             optimizer = cls(grouped_parameters, lr=lr_scheduler.rate, **configs)
         else:
             raise NotImplementedError
