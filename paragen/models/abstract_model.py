@@ -70,8 +70,7 @@ class AbstractModel(nn.Module):
 
         if 'model' in state_dict:
             state_dict = state_dict['model']
-        if 'module' in state_dict:
-            state_dict = state_dict['module']
+        state_dict = {key.lstrip('module.'): val for key, val in state_dict.items()}
         mismatched = self.load_state_dict(state_dict, strict=strict)
 
         if not strict:
