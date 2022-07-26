@@ -67,7 +67,12 @@ class AbstractModel(nn.Module):
         """
         paths = path.split(',')
         state_dict = get_avg_ckpt(paths, device=device)
-        mismatched = self.load_state_dict(state_dict['model'] if 'model' in state_dict else state_dict, strict=strict)
+
+        if 'model' in state_dict:
+            state_dict = state_dict['model']
+        if 'module' in state_dict:
+            state_dict = state_dict['module']
+        mismatched = self.load_state_dict(state_dict, strict=strict)
 
         if not strict:
             logger.info("keys IN this model but NOT IN loaded model >>> ")
