@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 import json
 import random
 
@@ -205,6 +205,9 @@ def possible_eval(x):
     Eval a value if possible
     """
     try:
-        return eval(x)
+        y = eval(x)
+        if type(y).__name__ == 'builtin_function_or_method':
+            return x
+        return y
     except:
         return x
