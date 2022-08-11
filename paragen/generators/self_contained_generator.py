@@ -38,3 +38,14 @@ class SelfContainedGenerator(AbstractGenerator):
     @property
     def model(self):
         return self._model
+
+    def reset(self, mode):
+        """
+        Reset generator states.
+
+        Args:
+            mode: running mode
+        """
+        self.eval()
+        self._mode = mode
+        self._model.reset(mode)
