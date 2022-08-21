@@ -1,0 +1,103 @@
+define:
+  # datapath: data/finetune
+  datapath: data
+task:
+  class: GermlineTask
+  requires_tokenize: True
+  mode: train
+  sequence_name: 'sequence'
+  germline_name: 'gemline'
+  label_name: 'label'
+  cdr_name: 'cdrs'
+  num_germline: 1
+  tokenizer:
+    class: Vocabulary
+    path: data/vocab
+    bos_token: <s>
+    eos_token: </s>
+    no_special_symbols: False
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 32
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: JsonDataset
+      sort_samples: True
+      path: ${datapath}/paratope_proc/cross_train_2_all.json
+    valid:
+      class: JsonDataset
+      sort_samples: False
+      path: ${datapath}/paratope_proc/cross_valid_2_all.json
+  model:
+    class: GermlineModel
+    d_model: 768
+    encoder:
+      class: TransformerEncoder
+      num_layers: 12
+      d_model: 768
+      n_head: 12
+      embed_scale: ~
+      dim_feedforward: 3072
+      dropout: 0.1      
+      attention_dropout: 0.1
+      activation: 'gelu'
+      learn_pos: True
+      embed_layer_norm: True
+    fusing_attn_type: 'x'
+    remove_loaded_head: True
+    linear_probing:
+      class: GermlineLabelingLayer
+      num_labels: 2
+      frozen_encoder: False
+    fusing_num_heads: 12
+
+    path: best.pt
+  criterion:
+    class: CrossEntropy
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 1e-5
+        warmup_steps: 100
+        total_steps: 12000
+      betas: (0.9, 0.98)
+      weight_decay: 0.01
+      eps: 1e-6
+    max_epochs: 20
+    validate_interval_epoch: 1
+    assess_by: roc
+    save_best_k: 1
+    save_last_k: 2
+    no_best_avg: True
+  generator:
+    class: Generator
+    is_regression: True
+  evaluator:
+    class: Evaluator
+    metric:
+      acc:
+        class: TokenAccuracy
+      mcc:
+        class: MatthewsCorr
+        is_labeling: True
+      roc:
+        class: ROC_AUC
+        is_labeling: True
+      f:
+        class: F1
+        target_label: 1
+        is_labeling: True
+env:
+  device: cuda
+  no_progress_bar: True

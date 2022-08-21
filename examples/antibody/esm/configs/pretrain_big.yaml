@@ -1,0 +1,57 @@
+define:
+  # datapath: data/finetune
+  datapath: data
+task:
+  class: MaskedLMTask
+  mode: train
+  src: en
+  tokenizer:
+    class: ESMTokenizer
+    model_name: &modelname esm/esm1b_t33_650M_UR50S.pt
+  dataloader:
+    train:
+      class: StreamingDataLoader
+      batch_size: 32
+      num_workers: 1
+    valid:
+      class: StreamingDataLoader
+      batch_size: 64
+      num_workers: 0
+  data:
+    train:
+      class: StreamingTextDataset
+      path: /root/data/clusterRes_07_valid.txt
+    valid:
+      class: StreamingTextDataset
+      path: /root/data/clusterRes_07_valid.txt
+  model:
+    class: ESMLM
+    model_name: *modelname
+    d_model: 1280
+    layer_num: 32
+  criterion:
+    class: SelfContainedLoss
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 1e-5
+        warmup_steps: 24000
+        total_steps: &total_steps 10000000
+      betas: (0.9, 0.98)
+      weight_decay: 0.01
+      eps: 1e-6
+    no_best_avg: True
+    max_steps: *total_steps
+    validate_interval_step: 2000
+    assess_by: valid.criterion
+    assess_reverse: True
+    save_model_dir: models/ESMLM_big
+    log_interval: 50
+env:
+  device: cuda
+  fp16: True
+  # device: cpu
+  no_progress_bar: True

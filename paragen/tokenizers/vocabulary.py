@@ -231,5 +231,7 @@ class Vocabulary(AbstractTokenizer):
 
     @property
     def special_tokens(self):
-        return {t[1:-1]: self._token2idx[t] for t in self._preserved_tokens + SPECIAL_SYMBOLS}
-
+        special_tokens_all = self._preserved_tokens
+        if not self._no_special_symbols:
+            special_tokens_all += SPECIAL_SYMBOLS
+        return {t[1:-1]: self._token2idx[t] for t in special_tokens_all}

@@ -1,0 +1,94 @@
+define:
+  datapath: data
+task:
+  class: AncestorGermlinePredictionTask
+  mode: train
+  sequence_name: sequence
+  germline_name: germline
+  num_germline: 1
+  negative_ratio: 0.25
+  maxlen: 400
+  requires_tokenize: True
+  tokenizer:
+    class: Vocabulary
+    path: data/vocab
+    bos_token: <s>
+    eos_token: </s>
+    no_special_symbols: False
+  dataloader:
+    train:
+      class: StreamingDataLoader
+      batch_size: 64
+      num_workers: 1
+    valid:
+      class: StreamingDataLoader
+      batch_size: 128
+      num_workers: 0
+  data:
+    train:
+      class: StreamingJsonDataset
+      path: data/clusterRes_70_valid.jsonl
+    valid:
+      class: StreamingJsonDataset
+      path: data/clusterRes_70_valid.jsonl
+  model:
+    class: EvolutionModel
+    d_model: 768
+    encoder:
+      class: TransformerGermlineEncoder
+      layer_type: 'transformer'
+      concat_pos_embed: True
+      normalize_before: True
+      num_layers: 12
+      d_model: 768
+      n_head: 12
+      embed_scale: False
+      embed_layer_norm: True
+      dim_feedforward: 3072
+      dropout: 0.1      
+      attention_dropout: 0.1
+      activation: 'gelu'
+      learn_pos: True
+    fusing_attn_type: '-'
+    linear_probing:
+      class: GermlineClassifierLayer
+      num_labels: 2
+      reduce_method: cls
+      frozen_encoder: False
+    path: checkpoints/model/best.pt
+  criterion:
+    class: CrossEntropy
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 1e-5
+        total_steps: &total_steps 10000000
+        warmup_steps: 2400
+      clip_norm: 0.0
+      betas: (0.9, 0.98)
+      eps: 1e-6
+      weight_decay: 1e-2
+    max_steps: *total_steps
+    validate_interval_epoch: 1
+    validate_interval_step: 1000
+    save_best_k: 1
+    save_last_k: 2
+    no_best_avg: True
+    early_stopping_tolerance: 10
+    assess_by: criterion
+    assess_reverse: True
+    save_model_dir: None
+  generator:
+    class: Generator
+  evaluator:
+    class: Evaluator
+    metric:
+      acc:
+        class: Accuracy
+env:
+  device: cuda
+  fp16: True
+  no_progress_bar: True

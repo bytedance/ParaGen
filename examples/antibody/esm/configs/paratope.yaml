@@ -1,0 +1,83 @@
+define:
+  datapath: data/finetune
+task:
+  class: GermlineTask
+  requires_tokenize: True
+  mode: train
+  sequence_name: 'sequence'
+  germline_name: 'gemline'
+  label_name: 'label'
+  cdr_name: 'cdrs'
+  num_germline: 1
+  tokenizer:
+    class: ESMTokenizer
+    model_name: &modelname esm1_t12_85M_UR50S
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 32
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: JsonDataset
+      sort_samples: True
+      path: ${datapath}/paratope_proc/cross_train_0_all.json
+    valid:
+      class: JsonDataset
+      sort_samples: False
+      path: ${datapath}/paratope_proc/cross_valid_0_all.json
+  model:
+    class: ESMPredictor
+    model_name: *modelname
+    d_model: 768
+    layer_num: 12
+    num_labels: 2
+    reduce_method: tag
+  criterion:
+    class: CrossEntropy
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 1e-5
+        warmup_steps: 100
+        total_steps: 12000
+      betas: (0.9, 0.98)
+      weight_decay: 0.01
+      eps: 1e-6
+    max_epochs: 20
+    validate_interval_epoch: 1
+    assess_by: roc
+    save_best_k: 1
+    save_last_k: 2
+    no_best_avg: True
+    early_stopping_tolerance: 3
+  generator:
+    class: Generator
+    is_regression: True
+  evaluator:
+    class: Evaluator
+    metric:
+      acc:
+        class: TokenAccuracy
+      mcc:
+        class: MatthewsCorr
+        is_labeling: True
+      roc:
+        class: ROC_AUC
+        is_labeling: True
+      f:
+        class: F1
+        target_label: 1
+        is_labeling: True
+env:
+  device: cuda
+  no_progress_bar: True

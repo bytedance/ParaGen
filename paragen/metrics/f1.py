@@ -7,9 +7,10 @@ class F1(PairwiseMetric):
     F1 evaluates F1 of produced hypotheses labels by comparing with references.
     """
 
-    def __init__(self, target_label):
+    def __init__(self, target_label, is_labeling=False):
         super().__init__()
         self._target_label = target_label
+        self._is_labeling = is_labeling
 
         self._precision, self._recall = 0, 0
 
@@ -31,7 +32,18 @@ class F1(PairwiseMetric):
 
     def _precision_recall(self):
         true_positive, false_positive, true_negative, false_negative = 1e-8, 0, 0, 0
-        for hypo, ref in zip(self.hypos, self.refs):
+        
+        if self._is_labeling:
+            hypotoken, reftoken = [], []
+            for hypo, ref in zip(self.hypos, self.refs):
+                hypotoken.extend(hypo)
+                reftoken.extend(ref)
+        else:
+            reftoken, hypotoken = self.refs, self.hypos
+        reftoken = [1 if r >= 0.5 else 0 for r in reftoken]
+        hypotoken = [1 if h >= 0.5 else 0 for h in hypotoken]
+            
+        for hypo, ref in zip(hypotoken, reftoken):
             if ref == self._target_label:
                 if hypo == ref:
                     true_positive += 1
@@ -48,8 +60,19 @@ class F1(PairwiseMetric):
 
     def _fast_precision_recall(self):
         import torch
-        hypos = torch.LongTensor(self.hypos)
-        refs = torch.LongTensor(self.refs)
+
+        if self._is_labeling:
+            hypotoken, reftoken = [], []
+            for hypo, ref in zip(self.hypos, self.refs):
+                hypotoken.extend(hypo)
+                reftoken.extend(ref)
+        else:
+            reftoken, hypotoken = self.refs, self.hypos
+        reftoken = [1 if r >= 0.5 else 0 for r in reftoken]
+        hypotoken = [1 if h >= 0.5 else 0 for h in hypotoken]
+
+        hypos = torch.LongTensor(hypotoken)
+        refs = torch.LongTensor(reftoken)
 
         from paragen.utils.runtime import Environment
         env = Environment()

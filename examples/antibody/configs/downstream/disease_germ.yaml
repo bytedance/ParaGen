@@ -1,0 +1,98 @@
+define:
+  datapath: data/finetune
+  # datapath: data
+task:
+  class: GermlineTask
+  mode: train
+  sequence_name: 'sequence'
+  germline_name: 'germline'
+  label_name: 'Disease'
+  requires_tokenize: True
+  tokenizer:
+    class: Vocabulary
+    path: data/vocab
+    # path: data/vocab
+    bos_token: <s>
+    eos_token: </s>
+    no_special_symbols: False
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 64
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 128
+  data:
+    train:
+      class: JsonDataset
+      sort_samples: True
+      path: ${datapath}/disease_germ_sm_3/cross_train_0_all.json
+    valid:
+      class: JsonDataset
+      sort_samples: False
+      path: ${datapath}/disease_germ_sm_3/cross_valid_0_all.json
+  model:
+    class: EvolutionModel
+    d_model: 768
+    encoder:
+      class: TransformerGermlineEncoder
+      layer_type: 'transformer'
+      layer_reduce_method: 'mean'
+      concat_pos_embed: True
+      normalize_before: True
+      num_layers: 12
+      d_model: 768
+      n_head: 12
+      embed_scale: False
+      embed_layer_norm: True
+      dim_feedforward: 3072
+      dropout: 0.1      
+      attention_dropout: 0.1
+      activation: 'gelu'
+      learn_pos: True
+      embed_layer_norm: True
+    fusing_attn_type: 'x'
+    linear_probing:
+      class: GermlineClassifierLayer
+      num_labels: 7
+      reduce_method: mean
+      frozen_encoder: False
+    path: checkpoints/model/best.pt
+  criterion:
+    class: CrossEntropy
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 2e-5
+        warmup_steps: 1000
+        total_steps: 500000
+      betas: (0.9, 0.98)
+      weight_decay: 0.01
+      eps: 1e-6
+    max_epochs: 30
+    validate_interval_epoch: 1
+    validate_interval_step: 200
+    assess_by: valid.acc
+    save_best_k: 1
+    save_last_k: 2
+    no_best_avg: True
+    early_stopping_tolerance: 10
+  generator:
+    class: Generator
+    is_regression: False
+  evaluator:
+    class: Evaluator
+    metric:
+      acc:
+        class: Accuracy
+env:
+  device: cuda
+  no_progress_bar: True
+  

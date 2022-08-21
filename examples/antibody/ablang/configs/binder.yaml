@@ -1,0 +1,95 @@
+define:
+  datapath: data/finetune
+  # datapath: data
+task:
+  class: GermlineTask
+  requires_tokenize: True
+  mode: train
+  sequence_name: 'aligned_sequence'
+  germline_name: 'germline'
+  label_name: 'label'
+  tokenizer:
+    class: Vocabulary
+    path: examples/antibody/ablang/vocab
+    bos_token: '<'
+    eos_token: '>'
+    pad_token: '-'
+    unk_token: '*'
+    no_special_symbols: True
+  dataloader:
+    train:
+      class: InMemoryDataLoader
+      sampler:
+        class: ShuffleSampler
+        max_samples: 256
+    valid:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 256
+    test:
+      class: InMemoryDataLoader
+      sampler:
+        class: SequentialSampler
+        max_samples: 256
+  data:
+    train:
+      class: JsonDataset
+      sort_samples: True
+      path: ${datapath}/binder/mHER_H3.proc.adj.train.jsonl
+    valid:
+      class: JsonDataset
+      sort_samples: False
+      path: ${datapath}/binder/mHER_H3.proc.adj.valid.jsonl
+    test:
+      class: JsonDataset
+      sort_samples: False
+      path: ${datapath}/binder/mHER_H3.proc.adj.test.jsonl
+  model:
+    class: AbLang
+    num_labels: 2
+    reduce_method: mean
+    hparam: checkpoints/ablang_heavy/hparams.json
+    path: checkpoints/ablang_heavy/amodel.pt
+  criterion:
+    class: CrossEntropy
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 2e-5
+        warmup_steps: 320
+        total_steps: 50000
+      betas: (0.9, 0.98)
+      weight_decay: 0.01
+      eps: 1e-6
+    max_epochs: 30
+    validate_interval_epoch: 1
+    assess_by: valid.roc
+    save_best_k: 1
+    save_last_k: 2
+    early_stopping_tolerance: 3
+    no_best_avg: True
+  generator:
+    class: Generator
+    is_regression: True
+  evaluator:
+    class: Evaluator
+    metric:
+      acc:
+        class: Accuracy
+      mcc:
+        class: MatthewsCorr
+        is_labeling: False
+      roc:
+        class: ROC_AUC
+        is_labeling: False
+      f:
+        class: F1
+        target_label: 1
+        is_labeling: False
+env:
+  device: cuda
+  no_progress_bar: True

@@ -1,0 +1,77 @@
+define:
+  datapath: data
+task:
+  class: EvolutionMaskedLMTask
+  mode: train
+  sequence_name: sequence
+  germline_name: germline
+  mask_align: True
+  num_germline: 1
+  maxlen: 400
+  requires_tokenize: True
+  tokenizer:
+    class: Vocabulary
+    path: data/vocab
+    bos_token: <s>
+    eos_token: </s>
+    no_special_symbols: False
+  dataloader:
+    train:
+      class: StreamingDataLoader
+      batch_size: 64
+      num_workers: 1
+    valid:
+      class: StreamingDataLoader
+      batch_size: 128
+      num_workers: 0
+  data:
+    train:
+      class: StreamingJsonDataset
+      path: data/clusterRes_07_valid.jsonl
+    valid:
+      class: StreamingJsonDataset
+      path: data/clusterRes_07_valid.jsonl
+  model:
+    class: BertModel
+    d_model: 1280
+    encoder:
+      class: TransformerGermlineEncoder
+      layer_type: 'transformer'
+      concat_pos_embed: True
+      normalize_before: True
+      num_layers: 34
+      d_model: 1280
+      n_head: 20
+      embed_scale: False
+      embed_layer_norm: True
+      dim_feedforward: 5120
+      dropout: 0.1      
+      attention_dropout: 0.1
+      activation: 'gelu'
+      learn_pos: True
+  criterion:
+    class: SelfContainedLoss
+  trainer:
+    class: Trainer
+    optimizer:
+      class: AdamW
+      lr:
+        class: PolynomialDecayScheduler
+        max_rate: 2e-4
+        total_steps: &total_steps 10000000
+        warmup_steps: 24000
+      clip_norm: 0.0
+      betas: (0.9, 0.98)
+      eps: 1e-6
+      weight_decay: 1e-2
+    max_steps: *total_steps
+    validate_interval_epoch: 1
+    validate_interval_step: 1000
+    no_best_avg: True
+    assess_by: criterion
+    assess_reverse: True
+    save_model_dir: None
+env:
+  device: cuda
+  fp16: True
+  no_progress_bar: True

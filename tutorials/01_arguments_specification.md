@@ -2,7 +2,7 @@ In ParaGen, arguments are passed to a program via a `yaml` file.
 
 # Arguments Definition
 The first question to use ParaGen is how to define arguments and how to pass arguments.
-For example, we create a translation task named `TranslationTask` 
+For example, we create a translation task named `TranslationTask`
 ```python
 from paragen.tasks import register_task
 
@@ -24,7 +24,7 @@ class TranslationTask:
                  ):
         pass
 ```
-As is show in examples, `TranslationTask` requires three arguments (`src`, `tgt`, `maxlen`) to initialize 
+As is show in examples, `TranslationTask` requires three arguments (`src`, `tgt`, `maxlen`) to initialize
 its instance.
 Then we may pass the arguments by
 ```yaml
@@ -72,7 +72,7 @@ class Seq2Seq:
                          share_embedding=share_embedding,
                          path=path)
 ```
-If we want to pass the neural model configuration to our translation task, we first add model configs 
+If we want to pass the neural model configuration to our translation task, we first add model configs
 to `TranslationTask` by
 ```python
 class TranslationTask:
@@ -85,14 +85,14 @@ class TranslationTask:
                  ):
         pass
 ```
-Then we set `yaml` file to 
+Then we set `yaml` file to
 ```yaml
 task:  
     class: TranslationTask
     src: en
     tgt: zh
     maxlen: 256
-    model: 
+    model:
       class: Seq2Seq
       encoder: ...
       decoder: ...
@@ -103,13 +103,13 @@ task:
 # Overwrite Default Arguments
 
 ParaGen supports to high-priority arguments to overwrite default ones.
-For example, if we want to run a `de-fr` task with a 256d neural model, run paragen with 
+For example, if we want to run a `de-fr` task with a 256d neural model, run paragen with
 ```bash
-{BYCHA_COMMAND} --config {CONFIG_PATH} --task.src de --task.tgt fr --task.model.d_model 256
+{PARAGEN_COMMAND} --config {CONFIG_PATH} --task.src de --task.tgt fr --task.model.d_model 256
 ```
 
 # Create a new class
-In ParaGen, there are mainly 12 special categories of classes, including 
+In ParaGen, there are mainly 12 special categories of classes, including
 - `criterion` computes training loss and is used for optimization;
 - `dataloader` inherits from `torch.utils.data.DataLoader` and is used to create batches of samples;
 - `dataset` inherits from `torch.utils.data.Dataset` and is to read data from `path`;

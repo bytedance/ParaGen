@@ -20,7 +20,11 @@ class Accuracy(PairwiseMetric):
             return self._score
         else:
             correct = 0
-            for hypo, ref in zip(self.hypos, self.refs):
+            hypos, refs = self.hypos, self.refs
+            if not isinstance(refs[0], str):
+                refs = [1 if r >= 0.5 else 0 for r in refs]
+                hypos = [1 if h >= 0.5 else 0 for h in hypos]
+            for hypo, ref in zip(hypos, refs):
                 correct += 1 if hypo == ref else 0
             self._score = correct / len(self.hypos)
         return self._score

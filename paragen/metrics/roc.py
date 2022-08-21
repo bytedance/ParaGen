@@ -1,21 +1,21 @@
-from sklearn.metrics import matthews_corrcoef
+import numpy as np
 
 from paragen.metrics import PairwiseMetric, register_metric
-
+from sklearn.metrics import roc_auc_score
 
 @register_metric
-class MatthewsCorr(PairwiseMetric):
+class ROC_AUC(PairwiseMetric):
     """
-    MatthewsCorr evaluates matthews correlation of produced hypotheses labels by comparing with references.
+    Accuracy evaluates accuracy of produced hypotheses labels by comparing with references.
     """
 
-    def __init__(self, is_labeling):
+    def __init__(self, is_labeling=False):
         super().__init__()
         self._is_labeling = is_labeling
 
     def eval(self):
         """
-        Calculate the spearman correlation of produced hypotheses comparing with references
+        Calculate the accuracy of produced hypotheses comparing with references
         Returns:
             score (float): evaluation score
         """
@@ -29,7 +29,5 @@ class MatthewsCorr(PairwiseMetric):
                     reftoken.extend(ref)
             else:
                 reftoken, hypotoken = self.refs, self.hypos
-            reftoken = [1 if r >= 0.5 else 0 for r in reftoken]
-            hypotoken = [1 if h >= 0.5 else 0 for h in hypotoken]
-            self._score = matthews_corrcoef(reftoken, hypotoken)
+            self._score = roc_auc_score(reftoken, hypotoken)
         return self._score
