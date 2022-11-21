@@ -34,6 +34,7 @@ if [ "$LOG" == "save" ]; then
     do
         echo ${MODEL}_${i} 
         paragen-run --config ${WOKESHOP}/configs/${CONFIG}.yaml \
+                    --lib examples/antibody/src \
                     --task.data.train.path ${DATADIR}/${DATA}/cross_train_${i}_all.json \
                     --task.data.valid.path ${DATADIR}/${DATA}/cross_valid_${i}_all.json \
                     --task.model.path ${WOKESHOP}/models/${MODEL}/best.pt \
@@ -51,6 +52,7 @@ elif [ "$LOG" == "drop" ]; then
       do
           echo ${MODEL}_${i} 
           paragen-run --config ${WOKESHOP}/configs/${CONFIG}.yaml \
+                      --lib examples/antibody/src \
                       --task.data.train.path ${DATADIR}/${DATA}/cross_train_${i}_all.json \
                       --task.data.valid.path ${DATADIR}/${DATA}/cross_valid_${i}_all.json \
                       --task.model.path ${WOKESHOP}/models/${MODEL}/best.pt \
